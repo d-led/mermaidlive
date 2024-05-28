@@ -41,7 +41,7 @@ func main() {
 	fs := getFS()
 	r.StaticFS("/ui/", fs)
 
-	eventPublisher := pubsub.New[string, Event](100 /* to do: unlimited mailbox*/)
+	eventPublisher := pubsub.New[string, Event](1 /* to do: unlimited mailbox*/)
 
 	fsm := NewAsyncFSM(eventPublisher)
 
@@ -83,6 +83,7 @@ func main() {
 		closeNotify := c.Writer.CloseNotify()
 		ticks := make(chan gin.H, 1)
 		myEvents := eventPublisher.Sub(topic)
+		defer eventPublisher.Unsub(myEvents, topic)
 
 		// ticks are private channels and goroutines per connection
 		go tick(tickContext, ticks)
