@@ -3,6 +3,8 @@ module github.com/d-led/mermaidlive
 go 1.22.3
 
 require (
+	github.com/Arceliar/phony v0.0.0-20220903101357-530938a4b13d
+	github.com/cskr/pubsub/v2 v2.0.2
 	github.com/evanw/esbuild v0.21.4
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.10.0

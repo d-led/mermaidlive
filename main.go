@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cskr/pubsub/v2"
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,13 +41,41 @@ func main() {
 	fs := getFS()
 	r.StaticFS("/ui/", fs)
 
+	eventPublisher := pubsub.New[string, Event](1)
+	events := eventPublisher.Sub(topic)
+
+	fsm := NewAsyncFSM(eventPublisher)
+
 	r.POST("/commands/:command", func(ctx *gin.Context) {
 		command := ctx.Param("command")
 		log.Println("command called:", command)
-		ctx.JSON(http.StatusOK, gin.H{
-			"result":  "success",
-			"command": command,
-		})
+		switch command {
+		case "waiting":
+			fsm.events.Pub(NewEventWithReason("CommandRejected", "wait or cancel, please"), topic)
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"result":  "rejected",
+				"command": command,
+				"reason":  "wait or cancel, please",
+			})
+			return
+		case "working":
+			fsm.StartWork()
+			ctx.JSON(http.StatusOK, gin.H{})
+			return
+		case "aborting":
+			fsm.CancelWork()
+			ctx.JSON(http.StatusOK, gin.H{})
+			return
+		default:
+			msg := "unknown command: '" + command + "'"
+			fsm.events.Pub(NewEventWithReason("CommandRejected", msg), topic)
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"result":  "rejected",
+				"command": command,
+				"reason":  msg,
+			})
+			return
+		}
 	})
 
 	r.GET("/events", func(c *gin.Context) {
@@ -54,7 +83,9 @@ func main() {
 		tickContext, stopTicking := context.WithCancel(ctx)
 		closeNotify := c.Writer.CloseNotify()
 		ticks := make(chan gin.H, 1)
+		myEvents := events
 
+		// ticks are private channels and goroutines per connection
 		go tick(tickContext, ticks)
 
 		// callback returns false on end of processing
@@ -69,6 +100,13 @@ func main() {
 				log.Printf("client closed the connection")
 				stopTicking()
 				return false
+
+			case event := <-myEvents:
+				c.JSON(http.StatusOK, event)
+				c.String(http.StatusOK, "\n")
+				c.Writer.(http.Flusher).Flush()
+				log.Println(event)
+				return true
 
 			case tick := <-ticks:
 				c.JSON(http.StatusOK, tick)
@@ -93,7 +131,7 @@ func tick(ctx context.Context, ticks chan gin.H) {
 			// fall-through
 		}
 		tick := gin.H{
-			"timestamp": time.Now().Format(time.RFC3339Nano),
+			"timestamp": now(),
 		}
 		ticks <- tick
 		time.Sleep(1 * time.Second)

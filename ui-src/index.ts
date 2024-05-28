@@ -49,14 +49,32 @@ async function subscribe() {
       console.log("ERROR: failed to read the messages");
     } else {
       // read all messages
+      let currentMessage="";
       while (true) {
         let chunk = await reader.read();
         if (chunk.done) {
           break;
         }
-        let message=JSON.parse(new TextDecoder('utf-8').decode(chunk.value))
-        // console.log("MESSAGE:", );
-        showServerTime(message.timestamp);
+        currentMessage+=new TextDecoder('utf-8').decode(chunk.value);
+        let endlineAt = currentMessage.indexOf('\n');
+        if (endlineAt===-1) {
+          console.log("incomplete chunk:", currentMessage)
+          continue;
+        }
+        let messageToProcess = currentMessage.substring(0, endlineAt);
+        currentMessage = currentMessage.substring(endlineAt+1);
+        try {
+          let message=JSON.parse(messageToProcess)
+          if (message.name) {
+            console.log("MESSAGE:", message);
+            await processEvent(message)
+          } else {
+            showServerTime(message.timestamp);
+          }
+        } catch(err) {
+            console.log("MESSAGE WAS:", currentMessage);
+            console.log("ERROR:",err?.message ?? err)
+        }
       }
     }
     // Call subscribe() again to try to reconnect
@@ -92,6 +110,10 @@ async function sleep(seconds: number) {
   await new Promise((resolve) => setTimeout(resolve, seconds * 1000 /*ms*/));
 }
 
+async function processEvent(event) {
+  // to do
+}
+
 async function postCommand(command:string) {
   console.log("trying to post transition: ", command);
   try {
@@ -102,8 +124,8 @@ async function postCommand(command:string) {
       headers: {
         "Content-Type": "application/json",
       },
-      redirect: "follow", // manual, *follow, error
-      referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      redirect: "follow",
+      referrerPolicy: "no-referrer",
       body: "{}",
     });
     console.log(await response.json());
