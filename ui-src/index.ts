@@ -18,9 +18,16 @@ $(async function () {
 
   console.log("done");
 
-  subscribe();
-
-  console.log("subscribed");
+  while(true) {
+    console.log("subscribing");
+    try {
+      await subscribe();
+    } catch (err) {
+      console.log("ERROR:", err.message || err)
+    }
+    console.log("waiting before reconnecting...")
+    await sleep(5);
+  }
 });
 
 async function subscribe() {
