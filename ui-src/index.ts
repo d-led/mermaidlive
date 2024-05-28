@@ -4,6 +4,10 @@ import { CatalogObject } from "./src/types";
 console.log(`loaded index.js`);
 
 $(async function () {
+  await mermaid.run({
+    querySelector: '.mermaid',
+  });
+
   $(".node").on("click", function (e) {
     postCommand($(this).find(".nodeLabel:first").text());
   });
@@ -111,7 +115,7 @@ async function sleep(seconds: number) {
 }
 
 async function processEvent(event) {
-  // to do
+  $("#last-event").text(`${event.timestamp}: ${event.name} (${JSON.stringify(event.properties)})`);
 }
 
 async function postCommand(command:string) {
