@@ -132,7 +132,8 @@ async function postCommand(command:string) {
       referrerPolicy: "no-referrer",
       body: "{}",
     });
-    console.log(await response.json());
+    // to do: when sync
+    // console.log(await response.json());
   } catch (err) {
     console.log("ERROR: posting command:", err?.message ?? err);
   }

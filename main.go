@@ -105,7 +105,6 @@ func main() {
 				c.JSON(http.StatusOK, event)
 				c.String(http.StatusOK, "\n")
 				c.Writer.(http.Flusher).Flush()
-				log.Println(event)
 				return true
 
 			case tick := <-ticks:
