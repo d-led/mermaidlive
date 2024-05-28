@@ -39,7 +39,15 @@ func main() {
 	r := gin.Default()
 	fs := getFS()
 	r.StaticFS("/ui/", fs)
-	log.Printf("http://localhost:8080/ui")
+
+	r.POST("/commands/:command", func(ctx *gin.Context) {
+		command := ctx.Param("command")
+		log.Println("command called:", command)
+		ctx.JSON(http.StatusOK, gin.H{
+			"result":  "success",
+			"command": command,
+		})
+	})
 
 	r.GET("/events", func(c *gin.Context) {
 		ctx := c.Request.Context()
@@ -70,6 +78,8 @@ func main() {
 			}
 		})
 	})
+
+	log.Printf("http://localhost:8080/ui")
 
 	r.Run()
 }

@@ -5,7 +5,7 @@ console.log(`loaded index.js`);
 
 $(async function () {
   $(".node").on("click", function (e) {
-    console.log("node clicked: ", $(this).find(".nodeLabel:first").text());
+    postCommand($(this).find(".nodeLabel:first").text());
   });
 
   console.log("ready");
@@ -23,7 +23,7 @@ $(async function () {
     try {
       await subscribe();
     } catch (err) {
-      console.log("ERROR:", err.message || err)
+      console.log("ERROR:", err?.message ?? err)
     }
     console.log("waiting before reconnecting...")
     await sleep(5);
@@ -90,4 +90,24 @@ function showServerTime(text: string) {
 
 async function sleep(seconds: number) {
   await new Promise((resolve) => setTimeout(resolve, seconds * 1000 /*ms*/));
+}
+
+async function postCommand(command:string) {
+  console.log("trying to post transition: ", command);
+  try {
+    const response = await fetch(`/commands/${command}`, {
+      method: "POST",
+      mode: "same-origin",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      redirect: "follow", // manual, *follow, error
+      referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      body: "{}",
+    });
+    console.log(await response.json());
+  } catch (err) {
+    console.log("ERROR: posting command:", err?.message ?? err);
+  }
 }
