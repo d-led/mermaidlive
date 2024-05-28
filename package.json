@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "prettier": "prettier -w ."
+  },
+  "dependencies": {
+    "@types/jquery": "^3.5.30",
+    "prettier": "^3.2.5"
+  }
+}
