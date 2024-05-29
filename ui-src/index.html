@@ -21,11 +21,8 @@
   <body>
     <main role="main" class="container">
       <div class="container">
-        <div class="d-flex flex-row mt-2 mb-2">
-          <p id="delayed-text"></p>
-        </div>
-
-        <div class="d-flex flex-row mt-2 mb-2">
+        <h4>Click on the edges (guards) to interact with the state machine</h4>
+        <div class="d-flex flex-row mt-2 mb-2" id="graph">
           <pre class="mermaid">
             stateDiagram-v2
               waiting --> working
@@ -33,30 +30,20 @@
               working --> waiting
               aborting --> waiting
               classDef inProgress font-style:italic, stroke-dasharray: 5 5, stroke-width:3px;
-              class working inProgress
+              class waiting inProgress
           </pre>
         </div>
 
-        <div class="d-flex flex-row mt-2 mb-2">
-          <p>Server time: <span id="server-time"></p>
-        </div>
-        <div class="d-flex flex-row mt-2 mb-2">
-            <p>Last event: <span id="last-event"></p>
-        </div>
+        <h4>Server-side updates & feedback</h4>
 
+        <!-- <div class="d-flex flex-row mt-2 mb-2">
+          <p class="monospaced">Server time: <span id="server-time"></p>
+        </div> -->
         <div class="d-flex flex-row mt-2 mb-2">
-          <table id="objects-table" class="table" style="display: none">
-            <caption>
-              Objects
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Name</th>
-              </tr>
-            </thead>
-            <tbody id="objects"></tbody>
-          </table>
+            <p class="monospaced">Last event  : <span id="last-event"></p>
+        </div>
+        <div class="d-flex flex-row mt-2 mb-2">
+          <p class="monospaced">Last error  : <span id="delayed-text"></span></p>
         </div>
       </div>
     </main>

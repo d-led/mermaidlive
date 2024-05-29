@@ -10,6 +10,9 @@ go run .
 
 [http://localhost:8080/ui/](http://localhost:8080/ui/)
 
-## Background
+![screencast](./docs/img/live_state.gif)
 
+## Approach
+
+- [Mermaid API](https://mermaid.js.org/config/setup/modules/mermaidAPI.html)
 - [JSON Streaming](https://en.wikipedia.org/wiki/JSON_streaming)

@@ -1,51 +1,49 @@
-import { getObjects } from "./src/client";
-import { CatalogObject } from "./src/types";
-
 console.log(`loaded index.js`);
 
+document.lastInput = "";
+
 $(async function () {
-  await mermaid.run({
-    querySelector: '.mermaid',
-  });
-
-  $(".node").on("click", function (e) {
-    postCommand($(this).find(".nodeLabel:first").text());
-  });
-
-  console.log("ready");
-  try {
-    const objects = await getObjects();
-    fillObjects(objects);
-  } catch (e) {
-    showText(`sorry, ${e.message ?? "an error happened"}`);
-  }
+  await reRenderGraph("waiting", "");
 
   console.log("done");
 
-  while(true) {
+  while (true) {
     console.log("subscribing");
     try {
-      await subscribe();
+      await Promise.all([subscribeToEvents()]);
     } catch (err) {
-      console.log("ERROR:", err?.message ?? err)
+      console.log("ERROR:", err?.message ?? err);
     }
-    console.log("waiting before reconnecting...")
+    console.log("waiting before reconnecting...");
     await sleep(5);
   }
 });
 
-async function subscribe() {
-  let response = await fetch("/events");
+async function subscribeToEvents() {
+  await subscribe("/events", processEvent);
+}
+
+async function subscribeToTimestamps() {
+  await subscribe("/timestamps", async (event) => {
+    if (event.name) {
+      return;
+    }
+    showServerTime(event.timestamp)
+  });
+}
+
+async function subscribe(streamUrl: string, processingFunc: (event: any) => Promise<void>) {
+  let response = await fetch(streamUrl);
 
   if (response.status == 502) {
     // reconnect on timeout
-    await subscribe();
+    await subscribe(streamUrl, processingFunc);
   } else if (response.status != 200) {
     // errored!
     console.log("ERROR:", response.statusText);
     // reconnect
     await sleep(3);
-    await subscribe();
+    await subscribe(streamUrl, processingFunc);
   } else {
     // Get and show the message
     const reader = response?.body?.getReader();
@@ -53,61 +51,57 @@ async function subscribe() {
       console.log("ERROR: failed to read the messages");
     } else {
       // read all messages
-      let currentMessage="";
+      let currentMessage = "";
       while (true) {
         let chunk = await reader.read();
         if (chunk.done) {
           break;
         }
-        currentMessage+=new TextDecoder('utf-8').decode(chunk.value);
-        let endlineAt = currentMessage.indexOf('\n');
-        if (endlineAt===-1) {
-          console.log("incomplete chunk:", currentMessage)
+        currentMessage += new TextDecoder("utf-8").decode(chunk.value);
+        let endlineAt = currentMessage.indexOf("\n");
+        if (endlineAt === -1) {
+          console.log("incomplete chunk:", currentMessage);
           continue;
         }
         let messageToProcess = currentMessage.substring(0, endlineAt);
-        currentMessage = currentMessage.substring(endlineAt+1);
+        currentMessage = currentMessage.substring(endlineAt + 1);
         try {
-          let message=JSON.parse(messageToProcess)
-          if (message.name) {
-            console.log("MESSAGE:", message);
-            await processEvent(message)
-          } else {
-            showServerTime(message.timestamp);
-          }
-        } catch(err) {
-            console.log("MESSAGE WAS:", currentMessage);
-            console.log("ERROR:",err?.message ?? err)
+          let message = JSON.parse(messageToProcess);
+            
+            await processingFunc(message);
+        } catch (err) {
+          console.log("MESSAGE WAS:", currentMessage);
+          console.log("ERROR:", err?.message ?? err);
         }
       }
     }
-    // Call subscribe() again to try to reconnect
+    // Call subscribe again to try to reconnect
     await sleep(1);
-    await subscribe();
+    await subscribe(streamUrl, processingFunc);
   }
 }
 
-function fillObjects(objects: CatalogObject[]) {
-  const objectsEl = $("#objects");
-
-  objects.forEach((o, _) => {
-    objectsEl.append(`
-              <tr>
-                  <th scope="row">${o.id}</th>
-                  <td>${o.name}</td>
-              </tr>
-          `);
-  });
-
-  $("#objects-table").show();
+function replaceText(selector, text: string) {
+  $(selector).text(text);
 }
 
-function showText(text: string) {
-  $("#delayed-text").text(text);
+function showLastError(text: string) {
+  replaceText("#delayed-text", text);
 }
 
 function showServerTime(text: string) {
-  $("#server-time").text(text);
+  replaceText("#server-time", text);
+}
+
+function showLastEvent(text: string) {
+  replaceText("#last-event", text);
+}
+
+function bindGraphClicks() {
+  $("span.edgeLabel").wrap('<a href="#"></a>');
+  $("span.edgeLabel").on("click", function (e) {
+    postCommand($(this).text());
+  });
 }
 
 async function sleep(seconds: number) {
@@ -115,10 +109,39 @@ async function sleep(seconds: number) {
 }
 
 async function processEvent(event) {
-  $("#last-event").text(`${event.timestamp}: ${event.name} (${JSON.stringify(event.properties)})`);
+  if (!event.name) {
+    return;
+  }
+
+  console.log("INCOMING_EVENT:", event);
+
+  let eventLine = formatEventIntoOneLine(event);
+
+  switch (event.name) {
+    case "WorkStarted":
+    case "WorkDone":
+      await reRenderGraph("waiting", "");
+      break;
+    case "Tick":
+      await reRenderGraph("working", ` ${event?.properties?.param}`);
+      break;
+    case "WorkCancellationRequested":
+      await reRenderGraph("aborting", "");
+      break;
+    case "RequestIgnored":
+    case "CommandRejected":
+      showLastError(eventLine);
+      // do nothing
+      break;
+    default:
+      await reRenderGraph("waiting", "");
+      break;
+  }
+
+  showLastEvent(eventLine);
 }
 
-async function postCommand(command:string) {
+async function postCommand(command: string) {
   console.log("trying to post transition: ", command);
   try {
     const response = await fetch(`/commands/${command}`, {
@@ -138,3 +161,44 @@ async function postCommand(command:string) {
     console.log("ERROR: posting command:", err?.message ?? err);
   }
 }
+
+async function reRenderGraph(selectedState, progress) {
+  let input = updateGraphDefinition(selectedState, progress);
+  if (input === document.lastInput) {
+    console.log("nothing to re-render");
+    return;
+  }
+  document.lastInput = input;
+  let rendered = await mermaid.mermaidAPI.render("temporary-graph", input);
+  let graph = document.querySelector("#graph");
+  graph.innerHTML = rendered.svg;
+  bindGraphClicks();
+}
+
+function updateGraphDefinition(selectedState, progress) {
+  let res = `stateDiagram-v2
+  waiting --> working : start
+  working --> aborting : abort
+  working --> waiting
+  aborting --> waiting
+  classDef inProgress font-style:italic, stroke-dasharray: 5 5, stroke-width:3px;
+  class ${selectedState} inProgress
+  `;
+  if (progress && progress.trim() !== "") {
+    res += `note right of working
+        ${progress}
+    end note`;
+  }
+  return res;
+}
+
+function formatEventIntoOneLine(event) {
+  let res = `${event.timestamp}: ${event.name}`;
+  if (Object.keys(event?.properties ?? ({})).length !== 0) {
+      // res+=` ${Object.entries(event.properties)})`;
+      res+=` [${Object.entries(event.properties).map((e)=>e[0]+": "+e[1]).join(", ")}]`;
+  }
+  return res;
+}
+
+

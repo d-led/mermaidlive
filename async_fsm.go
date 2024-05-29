@@ -28,7 +28,7 @@ func NewAsyncFSM(events *pubsub.PubSub[string, Event]) *AsyncFSM {
 func (fsm *AsyncFSM) StartWork() {
 	fsm.Act(fsm, func() {
 		if fsm.currentCount != 0 {
-			fsm.events.Pub(NewEventWithReason("RequestIgnored", "machine busy"), topic)
+			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot start: machine busy"), topic)
 			return
 		}
 		fsm.ctx, fsm.cancel = context.WithCancel(context.Background())
@@ -42,7 +42,7 @@ func (fsm *AsyncFSM) StartWork() {
 func (fsm *AsyncFSM) CancelWork() {
 	fsm.Act(fsm, func() {
 		if fsm.currentCount == 0 {
-			fsm.events.Pub(NewEventWithReason("RequestIgnored", "machine not busy"), topic)
+			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot cancel: machine not busy"), topic)
 			return
 		}
 		fsm.cancel()

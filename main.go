@@ -49,19 +49,11 @@ func main() {
 		command := ctx.Param("command")
 		log.Println("command called:", command)
 		switch command {
-		case "waiting":
-			fsm.events.Pub(NewEventWithReason("CommandRejected", "wait or cancel, please"), topic)
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"result":  "rejected",
-				"command": command,
-				"reason":  "wait or cancel, please",
-			})
-			return
-		case "working":
+		case "start":
 			fsm.StartWork()
 			ctx.JSON(http.StatusOK, gin.H{})
 			return
-		case "aborting":
+		case "abort":
 			fsm.CancelWork()
 			ctx.JSON(http.StatusOK, gin.H{})
 			return
@@ -88,6 +80,9 @@ func main() {
 		// ticks are private channels and goroutines per connection
 		go tick(tickContext, ticks)
 
+		streamOneEvent(c, NewSimpleEvent("StartedListening"))
+		streamOneEvent(c, timestampEvent())
+
 		// callback returns false on end of processing
 		c.Stream(func(w io.Writer) bool {
 			select {
@@ -102,15 +97,43 @@ func main() {
 				return false
 
 			case event := <-myEvents:
-				c.JSON(http.StatusOK, event)
-				c.String(http.StatusOK, "\n")
-				c.Writer.(http.Flusher).Flush()
+				streamOneEvent(c, event)
+
 				return true
 
 			case tick := <-ticks:
-				c.JSON(http.StatusOK, tick)
-				c.String(http.StatusOK, "\n")
-				c.Writer.(http.Flusher).Flush()
+				streamOneEvent(c, tick)
+				return true
+			}
+		})
+	})
+
+	r.GET("/timestamps", func(c *gin.Context) {
+		ctx := c.Request.Context()
+		tickContext, stopTicking := context.WithCancel(ctx)
+		closeNotify := c.Writer.CloseNotify()
+		ticks := make(chan gin.H, 1)
+
+		// ticks are private channels and goroutines per connection
+		go tick(tickContext, ticks)
+
+		streamOneEvent(c, timestampEvent())
+
+		// callback returns false on end of processing
+		c.Stream(func(w io.Writer) bool {
+			select {
+			case <-ctx.Done():
+				log.Printf("client disconnected")
+				stopTicking()
+				return false
+
+			case <-closeNotify:
+				log.Printf("client closed the connection")
+				stopTicking()
+				return false
+
+			case tick := <-ticks:
+				streamOneEvent(c, tick)
 				return true
 			}
 		})
@@ -129,9 +152,7 @@ func tick(ctx context.Context, ticks chan gin.H) {
 		default:
 			// fall-through
 		}
-		tick := gin.H{
-			"timestamp": now(),
-		}
+		tick := timestampEvent()
 		ticks <- tick
 		time.Sleep(1 * time.Second)
 	}
@@ -156,4 +177,16 @@ func getEmbeddedFS() http.FileSystem {
 	}
 
 	return http.FS(sub)
+}
+
+func timestampEvent() gin.H {
+	return gin.H{
+		"timestamp": now(),
+	}
+}
+
+func streamOneEvent(c *gin.Context, event any) {
+	c.JSON(http.StatusOK, event)
+	c.String(http.StatusOK, "\n")
+	c.Writer.(http.Flusher).Flush()
 }
