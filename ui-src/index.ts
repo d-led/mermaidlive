@@ -98,7 +98,7 @@ function showLastEvent(text: string) {
 }
 
 function bindGraphClicks() {
-  $("span.edgeLabel").wrap('<a href="#"></a>');
+  $("span.edgeLabel").wrap('<a href="#/"></a>');
   $("span.edgeLabel").on("click", function (e) {
     postCommand($(this).text());
   });
@@ -173,9 +173,16 @@ async function reRenderGraph(selectedState, progress) {
     return;
   }
   document.lastInput = input;
+  // save scroll position
+  let yScroll = window.scrollY;
+  console.log(window.scrollY)
   let rendered = await mermaid.mermaidAPI.render("temporary-graph", input);
   let graph = document.querySelector("#graph");
   graph.innerHTML = rendered.svg;
+
+  // restore scroll position
+  console.log(window.scrollY)
+  window.scrollY = yScroll;
   bindGraphClicks();
 }
 
