@@ -12,6 +12,22 @@ go run .
 
 ![screencast](./docs/img/live_state.gif)
 
+### Embedded Resources
+
+to only generate UI resources from [ui-src](./ui-src), run:
+
+```shell
+go run . -transpile
+```
+
+to build a binary with embedded UI:
+
+```shell
+go build --tags=embed .
+```
+
+
+
 ## Approach
 
 - [Mermaid API](https://mermaid.js.org/config/setup/modules/mermaidAPI.html)

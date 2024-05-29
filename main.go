@@ -27,21 +27,23 @@ var embeddedDist embed.FS
 func main() {
 	flag.Parse()
 
-	refresh()
-
 	if *transpileOnly {
+		refresh()
 		log.Println("exiting")
 		return
 	}
+
 	if !doEmbed {
+		refresh()
 		watcher := startWatching()
 		defer watcher.Close()
 	}
+
 	r := gin.Default()
 	fs := getFS()
 	r.StaticFS("/ui/", fs)
 
-	eventPublisher := pubsub.New[string, Event](1 /* to do: unlimited mailbox*/)
+	eventPublisher := pubsub.New[string, Event](1 /* to do: unbounded mailbox*/)
 
 	fsm := NewAsyncFSM(eventPublisher)
 
@@ -189,4 +191,8 @@ func streamOneEvent(c *gin.Context, event any) {
 	c.JSON(http.StatusOK, event)
 	c.String(http.StatusOK, "\n")
 	c.Writer.(http.Flusher).Flush()
+}
+
+func init() {
+	transpileOnly = flag.Bool("transpile", false, "transpile only and exit")
 }

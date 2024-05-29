@@ -4,7 +4,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 
 	"github.com/fsnotify/fsnotify"
@@ -12,7 +11,6 @@ import (
 
 func init() {
 	log.Println("using filesystem resources")
-	transpileOnly = flag.Bool("transpile", false, "transpile only and exit")
 }
 
 func startWatching() *fsnotify.Watcher {
