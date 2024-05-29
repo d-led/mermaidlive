@@ -33,17 +33,17 @@ func main() {
 		return
 	}
 
+	eventPublisher := pubsub.New[string, Event](1 /* to do: unbounded mailbox*/)
+
 	if !doEmbed {
 		refresh()
-		watcher := startWatching()
+		watcher := startWatching(eventPublisher)
 		defer watcher.Close()
 	}
 
 	r := gin.Default()
 	fs := getFS()
 	r.StaticFS("/ui/", fs)
-
-	eventPublisher := pubsub.New[string, Event](1 /* to do: unbounded mailbox*/)
 
 	fsm := NewAsyncFSM(eventPublisher)
 

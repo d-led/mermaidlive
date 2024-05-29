@@ -6,6 +6,7 @@ package main
 import (
 	"log"
 
+	"github.com/cskr/pubsub/v2"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -13,7 +14,7 @@ func init() {
 	log.Println("using filesystem resources")
 }
 
-func startWatching() *fsnotify.Watcher {
+func startWatching(eventPublisher *pubsub.PubSub[string, Event]) *fsnotify.Watcher {
 	watcher, err := fsnotify.NewWatcher()
 	crashOnError(err)
 
@@ -28,6 +29,7 @@ func startWatching() *fsnotify.Watcher {
 				if event.Has(fsnotify.Write) {
 					log.Println("modified: ", event.Name)
 					refresh()
+					eventPublisher.Pub(NewSimpleEvent("ResourcesRefreshed"), topic)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {

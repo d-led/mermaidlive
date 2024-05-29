@@ -133,6 +133,10 @@ async function processEvent(event) {
       showLastError(eventLine);
       // do nothing
       break;
+    case "ResourcesRefreshed":
+      console.log("resources updated, reloading...")
+      location.reload();
+      break;
     default:
       await reRenderGraph("waiting", "");
       break;
@@ -200,5 +204,3 @@ function formatEventIntoOneLine(event) {
   }
   return res;
 }
-
-
