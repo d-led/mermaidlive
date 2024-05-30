@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"embed"
 	"flag"
 	"io"
@@ -9,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/cskr/pubsub/v2"
 	"github.com/gin-gonic/gin"
@@ -73,14 +71,9 @@ func main() {
 
 	r.GET("/events", func(c *gin.Context) {
 		ctx := c.Request.Context()
-		tickContext, stopTicking := context.WithCancel(ctx)
 		closeNotify := c.Writer.CloseNotify()
-		ticks := make(chan gin.H, 1)
 		myEvents := eventPublisher.Sub(topic)
 		defer eventPublisher.Unsub(myEvents, topic)
-
-		// ticks are private channels and goroutines per connection
-		go tick(tickContext, ticks)
 
 		streamOneEvent(c, NewSimpleEvent("StartedListening"))
 		streamOneEvent(c, timestampEvent())
@@ -90,52 +83,15 @@ func main() {
 			select {
 			case <-ctx.Done():
 				log.Printf("client disconnected")
-				stopTicking()
 				return false
 
 			case <-closeNotify:
 				log.Printf("client closed the connection")
-				stopTicking()
 				return false
 
 			case event := <-myEvents:
 				streamOneEvent(c, event)
 
-				return true
-
-			case tick := <-ticks:
-				streamOneEvent(c, tick)
-				return true
-			}
-		})
-	})
-
-	r.GET("/timestamps", func(c *gin.Context) {
-		ctx := c.Request.Context()
-		tickContext, stopTicking := context.WithCancel(ctx)
-		closeNotify := c.Writer.CloseNotify()
-		ticks := make(chan gin.H, 1)
-
-		// ticks are private channels and goroutines per connection
-		go tick(tickContext, ticks)
-
-		streamOneEvent(c, timestampEvent())
-
-		// callback returns false on end of processing
-		c.Stream(func(w io.Writer) bool {
-			select {
-			case <-ctx.Done():
-				log.Printf("client disconnected")
-				stopTicking()
-				return false
-
-			case <-closeNotify:
-				log.Printf("client closed the connection")
-				stopTicking()
-				return false
-
-			case tick := <-ticks:
-				streamOneEvent(c, tick)
 				return true
 			}
 		})
@@ -144,20 +100,6 @@ func main() {
 	log.Printf("http://localhost:8080/ui")
 
 	r.Run()
-}
-
-func tick(ctx context.Context, ticks chan gin.H) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			// fall-through
-		}
-		tick := timestampEvent()
-		ticks <- tick
-		time.Sleep(1 * time.Second)
-	}
 }
 
 func getFS() http.FileSystem {
