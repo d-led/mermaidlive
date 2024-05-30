@@ -58,6 +58,42 @@ func theCommandIsCast(ctx context.Context, command string) (context.Context, err
 	return ctx, err
 }
 
+func theRequestIsIgnored(ctx context.Context) error {
+	events, err := receiveAllFiredEventsUpToNow(ctx)
+	if err != nil {
+		return err
+	}
+	for _, receivedEvent := range events {
+		if receivedEvent.Name == "RequestIgnored" {
+			return nil
+		}
+	}
+	return errors.New("Expected to see a 'RequestIgnored' it hasn't been published")
+}
+
+func receiveAllFiredEventsUpToNow(ctx context.Context) ([]Event, error) {
+	res := []Event{}
+	done := false
+
+	listener, ok := ctx.Value(listenerKey{}).(chan Event)
+	if !ok || listener == nil {
+		return res, errListenerNotFound
+	}
+
+	for {
+		select {
+		case receivedEvent := <-listener:
+			res = append(res, receivedEvent)
+		default:
+			done = true
+		}
+		if done {
+			break
+		}
+	}
+	return res, nil
+}
+
 func theFollowingEventsCanBeObserved(ctx context.Context, events *godog.Table) (context.Context, error) {
 	listener, ok := ctx.Value(listenerKey{}).(chan Event)
 	if !ok || listener == nil {
@@ -104,7 +140,8 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		ctx = context.WithValue(ctx, listenerKey{}, nil)
 		return ctx, nil
 	})
-	ctx.Step(`^a machine in state "(\S+)"$`, aMachineInState)
-	ctx.Step(`^the "(\S+)" command is cast$`, theCommandIsCast)
+	ctx.Step(`^the system is in state "(\S+)"$`, aMachineInState)
+	ctx.Step(`^the system "([^"]*)" is requested$`, theCommandIsCast)
+	ctx.Step(`^the request is ignored$`, theRequestIsIgnored)
 	ctx.Step(`^the following events can be observed:$`, theFollowingEventsCanBeObserved)
 }
