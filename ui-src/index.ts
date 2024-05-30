@@ -28,11 +28,14 @@ async function subscribeToTimestamps() {
     if (event.name) {
       return;
     }
-    showServerTime(event.timestamp)
+    showServerTime(event.timestamp);
   });
 }
 
-async function subscribe(streamUrl: string, processingFunc: (event: any) => Promise<void>) {
+async function subscribe(
+  streamUrl: string,
+  processingFunc: (event: any) => Promise<void>,
+) {
   let response = await fetch(streamUrl);
 
   if (response.status == 502) {
@@ -58,21 +61,24 @@ async function subscribe(streamUrl: string, processingFunc: (event: any) => Prom
           break;
         }
         currentMessage += new TextDecoder("utf-8").decode(chunk.value);
-        let endlineAt = currentMessage.indexOf("\n");
-        if (endlineAt === -1) {
-          console.log("incomplete chunk:", currentMessage);
-          continue;
-        }
-        let messageToProcess = currentMessage.substring(0, endlineAt);
-        currentMessage = currentMessage.substring(endlineAt + 1);
-        try {
-          let message = JSON.parse(messageToProcess);
-            
+        let endlineAt = -1;
+        do {
+          endlineAt = currentMessage.indexOf("\n");
+          if (endlineAt === -1) {
+            console.log("incomplete chunk:", currentMessage);
+            break;
+          }
+          let messageToProcess = currentMessage.substring(0, endlineAt);
+          currentMessage = currentMessage.substring(endlineAt + 1);
+          try {
+            let message = JSON.parse(messageToProcess);
+
             await processingFunc(message);
-        } catch (err) {
-          console.log("MESSAGE WAS:", currentMessage);
-          console.log("ERROR:", err?.message ?? err);
-        }
+          } catch (err) {
+            console.log("MESSAGE WAS:", currentMessage);
+            console.log("ERROR:", err?.message ?? err);
+          }
+        } while (true);
       }
     }
     // Call subscribe again to try to reconnect
@@ -134,7 +140,7 @@ async function processEvent(event) {
       // do nothing
       break;
     case "ResourcesRefreshed":
-      console.log("resources updated, reloading...")
+      console.log("resources updated, reloading...");
       location.reload();
       break;
     default:
@@ -173,17 +179,14 @@ async function reRenderGraph(selectedState, progress) {
     return;
   }
   document.lastInput = input;
-  // save scroll position
-  let yScroll = window.scrollY;
-  console.log(window.scrollY)
   let rendered = await mermaid.mermaidAPI.render("temporary-graph", input);
   let graph = document.querySelector("#graph");
-  graph.innerHTML = rendered.svg;
-
-  // restore scroll position
-  console.log(window.scrollY)
-  window.scrollY = yScroll;
-  bindGraphClicks();
+  if (graph) {
+    graph.innerHTML = rendered.svg;
+    bindGraphClicks();
+  } else {
+    console.log("ERROR: could not find target element for redrawing");
+  }
 }
 
 function updateGraphDefinition(selectedState, progress) {
@@ -205,9 +208,11 @@ function updateGraphDefinition(selectedState, progress) {
 
 function formatEventIntoOneLine(event) {
   let res = `${event.timestamp}: ${event.name}`;
-  if (Object.keys(event?.properties ?? ({})).length !== 0) {
-      // res+=` ${Object.entries(event.properties)})`;
-      res+=` [${Object.entries(event.properties).map((e)=>e[0]+": "+e[1]).join(", ")}]`;
+  if (Object.keys(event?.properties ?? {}).length !== 0) {
+    // res+=` ${Object.entries(event.properties)})`;
+    res += ` [${Object.entries(event.properties)
+      .map((e) => e[0] + ": " + e[1])
+      .join(", ")}]`;
   }
   return res;
 }
