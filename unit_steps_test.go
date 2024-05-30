@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"testing"
 
@@ -15,6 +16,7 @@ type observerKey struct{}
 type listenerKey struct{}
 
 var errSutNotFound = errors.New("SUT not found, check step definitions")
+var errListenerNotFound = errors.New("listener not found, check step definitions")
 
 func aMachineInState(ctx context.Context, state string) (context.Context, error) {
 	observer := pubsub.New[string, Event](10 /*enough to buffer between steps*/)
@@ -56,8 +58,24 @@ func theCommandIsCast(ctx context.Context, command string) (context.Context, err
 	return ctx, err
 }
 
-func theFollowingEventsCanBeObserved(arg1 *godog.Table) error {
-	return godog.ErrPending
+func theFollowingEventsCanBeObserved(ctx context.Context, events *godog.Table) (context.Context, error) {
+	listener, ok := ctx.Value(listenerKey{}).(chan Event)
+	if !ok || listener == nil {
+		return ctx, errListenerNotFound
+	}
+
+	for _, expectedEvent := range events.Rows {
+		expectedEventName := expectedEvent.Cells[0].Value
+		receivedEvent, ok := <-listener
+		if !ok {
+			return ctx, errors.New("Haven't received expected event: " + expectedEventName)
+		}
+		if receivedEvent.Name != expectedEventName {
+			return ctx, fmt.Errorf("received '%s' event but received '%s'", receivedEvent.Name, expectedEventName)
+		}
+	}
+
+	return ctx, nil
 }
 
 func TestFeatures(t *testing.T) {
