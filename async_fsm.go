@@ -14,14 +14,20 @@ type AsyncFSM struct {
 	ctx          context.Context
 	cancel       context.CancelFunc
 	events       *pubsub.PubSub[string, Event]
+	delay        time.Duration
 	currentCount uint8
 }
 
 func NewAsyncFSM(events *pubsub.PubSub[string, Event]) *AsyncFSM {
+	return NewCustomAsyncFSM(events, 800*time.Millisecond)
+}
+
+func NewCustomAsyncFSM(events *pubsub.PubSub[string, Event], delay time.Duration) *AsyncFSM {
 	return &AsyncFSM{
 		ctx:    context.Background(),
 		cancel: noOp(), /*no-op*/
 		events: events,
+		delay:  delay,
 	}
 }
 
@@ -57,7 +63,7 @@ func (fsm *AsyncFSM) tick() {
 		select {
 		case <-fsm.ctx.Done():
 			go func() {
-				time.Sleep(800 * time.Millisecond)
+				time.Sleep(fsm.delay)
 				fsm.events.Pub(NewSimpleEvent("WorkAborted"), topic)
 			}()
 			fsm.currentCount = 0
@@ -69,13 +75,13 @@ func (fsm *AsyncFSM) tick() {
 		fsm.currentCount--
 		if fsm.currentCount == 0 {
 			go func() {
-				time.Sleep(800 * time.Millisecond)
+				time.Sleep(fsm.delay)
 				fsm.events.Pub(NewSimpleEvent("WorkDone"), topic)
 			}()
 			return
 		}
 		go func() {
-			time.Sleep(800 * time.Millisecond)
+			time.Sleep(fsm.delay)
 			fsm.tick()
 		}()
 	})
