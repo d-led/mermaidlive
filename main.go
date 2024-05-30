@@ -32,10 +32,11 @@ func main() {
 	}
 
 	eventPublisher := pubsub.New[string, Event](1 /* to do: unbounded mailbox*/)
+	publisher := NewPubSubPublisher(eventPublisher)
 
 	if !doEmbed {
 		refresh()
-		watcher := startWatching(eventPublisher)
+		watcher := startWatching(publisher)
 		defer watcher.Close()
 	}
 
@@ -43,7 +44,7 @@ func main() {
 	fs := getFS()
 	r.StaticFS("/ui/", fs)
 
-	fsm := NewAsyncFSM(eventPublisher)
+	fsm := NewAsyncFSM(publisher)
 
 	r.POST("/commands/:command", func(ctx *gin.Context) {
 		command := ctx.Param("command")
@@ -59,7 +60,7 @@ func main() {
 			return
 		default:
 			msg := "unknown command: '" + command + "'"
-			fsm.events.Pub(NewEventWithReason("CommandRejected", msg), topic)
+			publisher.Publish(NewEventWithReason("CommandRejected", msg))
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"result":  "rejected",
 				"command": command,

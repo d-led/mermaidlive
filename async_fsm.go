@@ -6,18 +6,17 @@ import (
 	"time"
 
 	"github.com/Arceliar/phony"
-	"github.com/cskr/pubsub/v2"
 )
 
 type AsyncFSM struct {
 	phony.Inbox
 	ctx          context.Context
 	cancel       context.CancelFunc
-	events       *pubsub.PubSub[string, Event]
+	events       EventPublisher
 	currentCount uint8
 }
 
-func NewAsyncFSM(events *pubsub.PubSub[string, Event]) *AsyncFSM {
+func NewAsyncFSM(events EventPublisher) *AsyncFSM {
 	return &AsyncFSM{
 		ctx:    context.Background(),
 		cancel: noOp(), /*no-op*/
@@ -28,11 +27,11 @@ func NewAsyncFSM(events *pubsub.PubSub[string, Event]) *AsyncFSM {
 func (fsm *AsyncFSM) StartWork() {
 	fsm.Act(fsm, func() {
 		if fsm.currentCount != 0 {
-			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot start: machine busy"), topic)
+			fsm.events.Publish(NewEventWithReason("RequestIgnored", "cannot start: machine busy"))
 			return
 		}
 		fsm.ctx, fsm.cancel = context.WithCancel(context.Background())
-		fsm.events.Pub(NewSimpleEvent("WorkStarted"), topic)
+		fsm.events.Publish(NewSimpleEvent("WorkStarted"))
 		fsm.currentCount = 10
 		go fsm.tick()
 	})
@@ -42,11 +41,11 @@ func (fsm *AsyncFSM) StartWork() {
 func (fsm *AsyncFSM) AbortWork() {
 	fsm.Act(fsm, func() {
 		if fsm.currentCount == 0 {
-			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot abort: machine not busy"), topic)
+			fsm.events.Publish(NewEventWithReason("RequestIgnored", "cannot abort: machine not busy"))
 			return
 		}
 		fsm.cancel()
-		fsm.events.Pub(NewSimpleEvent("WorkAbortRequested"), topic)
+		fsm.events.Publish(NewSimpleEvent("WorkAbortRequested"))
 	})
 	log.Println("AbortWork finished")
 }
@@ -58,19 +57,19 @@ func (fsm *AsyncFSM) tick() {
 		case <-fsm.ctx.Done():
 			go func() {
 				time.Sleep(800 * time.Millisecond)
-				fsm.events.Pub(NewSimpleEvent("WorkAborted"), topic)
+				fsm.events.Publish(NewSimpleEvent("WorkAborted"))
 			}()
 			fsm.currentCount = 0
 			return
 		default:
 			// not canceled yet
 		}
-		fsm.events.Pub(NewEventWithParam("Tick", fsm.currentCount), topic)
+		fsm.events.Publish(NewEventWithParam("Tick", fsm.currentCount))
 		fsm.currentCount--
 		if fsm.currentCount == 0 {
 			go func() {
 				time.Sleep(800 * time.Millisecond)
-				fsm.events.Pub(NewSimpleEvent("WorkDone"), topic)
+				fsm.events.Publish(NewSimpleEvent("WorkDone"))
 			}()
 			return
 		}
