@@ -28,6 +28,7 @@ go build --tags=embed .
 ## Testing
 
 - WIP
+- "test-after" as a spike in itself
 - the demo revolves around reusing the [specification](./features/)
 
 ### Unit
