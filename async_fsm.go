@@ -39,24 +39,27 @@ func (fsm *AsyncFSM) StartWork() {
 	log.Println("StartWork finished")
 }
 
-func (fsm *AsyncFSM) CancelWork() {
+func (fsm *AsyncFSM) AbortWork() {
 	fsm.Act(fsm, func() {
 		if fsm.currentCount == 0 {
-			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot cancel: machine not busy"), topic)
+			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot abort: machine not busy"), topic)
 			return
 		}
 		fsm.cancel()
-		fsm.events.Pub(NewSimpleEvent("WorkCancellationRequested"), topic)
+		fsm.events.Pub(NewSimpleEvent("WorkAbortRequested"), topic)
 	})
-	log.Println("CancelWork finished")
+	log.Println("AbortWork finished")
 }
 
 func (fsm *AsyncFSM) tick() {
 	fsm.Act(fsm, func() {
-		// check if canceled
+		// check if aborted
 		select {
 		case <-fsm.ctx.Done():
-			fsm.events.Pub(NewSimpleEvent("WorkCanceled"), topic)
+			go func() {
+				time.Sleep(800 * time.Millisecond)
+				fsm.events.Pub(NewSimpleEvent("WorkAborted"), topic)
+			}()
 			fsm.currentCount = 0
 			return
 		default:
@@ -65,7 +68,10 @@ func (fsm *AsyncFSM) tick() {
 		fsm.events.Pub(NewEventWithParam("Tick", fsm.currentCount), topic)
 		fsm.currentCount--
 		if fsm.currentCount == 0 {
-			fsm.events.Pub(NewSimpleEvent("WorkDone"), topic)
+			go func() {
+				time.Sleep(800 * time.Millisecond)
+				fsm.events.Pub(NewSimpleEvent("WorkDone"), topic)
+			}()
 			return
 		}
 		go func() {

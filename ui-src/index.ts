@@ -122,7 +122,7 @@ async function processEvent(event) {
     case "Tick":
       await reRenderGraph("working", ` ${event?.properties?.param}`);
       break;
-    case "WorkCancellationRequested":
+    case "WorkAbortRequested":
       await reRenderGraph("aborting", "");
       break;
     case "RequestIgnored":

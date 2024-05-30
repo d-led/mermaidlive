@@ -54,7 +54,7 @@ func main() {
 			ctx.JSON(http.StatusOK, gin.H{})
 			return
 		case "abort":
-			fsm.CancelWork()
+			fsm.AbortWork()
 			ctx.JSON(http.StatusOK, gin.H{})
 			return
 		default:
