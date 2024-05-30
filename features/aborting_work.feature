@@ -1,4 +1,4 @@
-Feature: Wrong transitions
+Feature: Aborting Work
 
     Scenario: Aborting a waiting machine is ignored
         Given the system is in state "waiting"
