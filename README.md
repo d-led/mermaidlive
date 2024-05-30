@@ -25,6 +25,16 @@ to build a binary with embedded UI:
 ```shell
 go build --tags=embed .
 ```
+## Testing
+
+- WIP
+- the demo revolves around reusing the [specification](./features/)
+
+### Unit
+
+```shell
+go test -v ./...
+```
 
 ## Approach
 

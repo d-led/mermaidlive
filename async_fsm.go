@@ -81,6 +81,15 @@ func (fsm *AsyncFSM) tick() {
 	})
 }
 
+// sync queries - not to be used from within actor behaviors (methods)
+func (fsm *AsyncFSM) IsWaiting() bool {
+	var currentCount uint8
+	phony.Block(fsm, func() {
+		currentCount = fsm.currentCount
+	})
+	return currentCount == 0
+}
+
 func noOp() context.CancelFunc {
 	return func() {}
 }
