@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/cskr/pubsub/v2"
 	"github.com/cucumber/godog"
@@ -20,7 +21,7 @@ var errListenerNotFound = errors.New("listener not found, check step definitions
 func aMachineInState(ctx context.Context, state string) (context.Context, error) {
 	observer := pubsub.New[string, Event](10 /*enough to buffer between steps*/)
 	ctx = context.WithValue(ctx, observerKey{}, observer)
-	sut := NewCustomAsyncFSM(observer, 0)
+	sut := NewCustomAsyncFSM(observer, 100*time.Millisecond)
 	ctx = context.WithValue(ctx, sutKey{}, sut)
 	listener := observer.Sub(topic)
 	ctx = context.WithValue(ctx, listenerKey{}, listener)
@@ -50,6 +51,8 @@ func theCommandIsCast(ctx context.Context, command string) (context.Context, err
 	switch command {
 	case "abort":
 		sut.AbortWork()
+	case "start":
+		sut.StartWork()
 	default:
 		err = errors.New("unknown command: " + command)
 	}
@@ -57,21 +60,34 @@ func theCommandIsCast(ctx context.Context, command string) (context.Context, err
 	return ctx, err
 }
 
+func someWorkHasProgressed() error {
+	return godog.ErrPending
+}
+
+func workIsCanceled() error {
+	return godog.ErrPending
+}
+
 func theRequestIsIgnored(ctx context.Context) error {
-	events, err := receiveAllFiredEventsUpToNow(ctx, 1)
+	events, err := receiveEventsTill(ctx, "RequestIgnored", 1*time.Second)
 	if err != nil {
 		return err
 	}
+	return expectToFindEvent(events, "RequestIgnored")
+}
+
+func expectToFindEvent(events []Event, event string) error {
 	for _, receivedEvent := range events {
-		if receivedEvent.Name == "RequestIgnored" {
+		if receivedEvent.Name == event {
 			return nil
 		}
 	}
-	return errors.New("Expected to see a 'RequestIgnored' it hasn't been published")
+	return errors.New("Expected to see a 'RequestIgnored' but it hasn't been published")
 }
 
-func receiveAllFiredEventsUpToNow(ctx context.Context, expectedCount int) ([]Event, error) {
+func receiveEventsTill(ctx context.Context, event string, timeout time.Duration) ([]Event, error) {
 	res := []Event{}
+	var err error
 	done := false
 
 	listener, ok := ctx.Value(listenerKey{}).(chan Event)
@@ -83,16 +99,17 @@ func receiveAllFiredEventsUpToNow(ctx context.Context, expectedCount int) ([]Eve
 		select {
 		case receivedEvent := <-listener:
 			res = append(res, receivedEvent)
-		default:
-			if len(res) >= expectedCount {
+			if receivedEvent.Name == event {
 				done = true
 			}
+		case <-time.After(timeout):
+			err = errors.New("timed out waiting for event: " + event)
 		}
 		if done {
 			break
 		}
 	}
-	return res, nil
+	return res, err
 }
 
 func TestFeatures(t *testing.T) {
@@ -124,4 +141,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the system is in state "(\S+)"$`, aMachineInState)
 	ctx.Step(`^the system "([^"]*)" is requested$`, theCommandIsCast)
 	ctx.Step(`^the request is ignored$`, theRequestIsIgnored)
+	ctx.Step(`^some work has progressed$`, someWorkHasProgressed)
+	ctx.Step(`^work is canceled$`, workIsCanceled)
 }
