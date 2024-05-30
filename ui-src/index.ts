@@ -10,7 +10,7 @@ $(async function () {
   while (true) {
     console.log("subscribing");
     try {
-      await Promise.all([subscribeToEvents()]);
+      await subscribeToEvents();
     } catch (err) {
       console.log("ERROR:", err?.message ?? err);
     }
@@ -21,15 +21,6 @@ $(async function () {
 
 async function subscribeToEvents() {
   await subscribe("/events", processEvent);
-}
-
-async function subscribeToTimestamps() {
-  await subscribe("/timestamps", async (event) => {
-    if (event.name) {
-      return;
-    }
-    showServerTime(event.timestamp);
-  });
 }
 
 async function subscribe(

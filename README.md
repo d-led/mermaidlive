@@ -26,8 +26,6 @@ to build a binary with embedded UI:
 go build --tags=embed .
 ```
 
-
-
 ## Approach
 
 - [Mermaid API](https://mermaid.js.org/config/setup/modules/mermaidAPI.html)
