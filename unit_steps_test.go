@@ -20,7 +20,7 @@ var errListenerNotFound = errors.New("listener not found, check step definitions
 func aMachineInState(ctx context.Context, state string) (context.Context, error) {
 	observer := pubsub.New[string, Event](10 /*enough to buffer between steps*/)
 	ctx = context.WithValue(ctx, observerKey{}, observer)
-	sut := NewAsyncFSM(observer)
+	sut := NewCustomAsyncFSM(observer, 0)
 	ctx = context.WithValue(ctx, sutKey{}, sut)
 	listener := observer.Sub(topic)
 	ctx = context.WithValue(ctx, listenerKey{}, listener)
