@@ -56,7 +56,6 @@ async function subscribe(
         do {
           endlineAt = currentMessage.indexOf("\n");
           if (endlineAt === -1) {
-            console.log("incomplete chunk:", currentMessage);
             break;
           }
           let messageToProcess = currentMessage.substring(0, endlineAt);
