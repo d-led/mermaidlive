@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"testing"
 
@@ -59,7 +58,7 @@ func theCommandIsCast(ctx context.Context, command string) (context.Context, err
 }
 
 func theRequestIsIgnored(ctx context.Context) error {
-	events, err := receiveAllFiredEventsUpToNow(ctx)
+	events, err := receiveAllFiredEventsUpToNow(ctx, 1)
 	if err != nil {
 		return err
 	}
@@ -71,7 +70,7 @@ func theRequestIsIgnored(ctx context.Context) error {
 	return errors.New("Expected to see a 'RequestIgnored' it hasn't been published")
 }
 
-func receiveAllFiredEventsUpToNow(ctx context.Context) ([]Event, error) {
+func receiveAllFiredEventsUpToNow(ctx context.Context, expectedCount int) ([]Event, error) {
 	res := []Event{}
 	done := false
 
@@ -85,33 +84,15 @@ func receiveAllFiredEventsUpToNow(ctx context.Context) ([]Event, error) {
 		case receivedEvent := <-listener:
 			res = append(res, receivedEvent)
 		default:
-			done = true
+			if len(res) >= expectedCount {
+				done = true
+			}
 		}
 		if done {
 			break
 		}
 	}
 	return res, nil
-}
-
-func theFollowingEventsCanBeObserved(ctx context.Context, events *godog.Table) (context.Context, error) {
-	listener, ok := ctx.Value(listenerKey{}).(chan Event)
-	if !ok || listener == nil {
-		return ctx, errListenerNotFound
-	}
-
-	for _, expectedEvent := range events.Rows {
-		expectedEventName := expectedEvent.Cells[0].Value
-		receivedEvent, ok := <-listener
-		if !ok {
-			return ctx, errors.New("Haven't received expected event: " + expectedEventName)
-		}
-		if receivedEvent.Name != expectedEventName {
-			return ctx, fmt.Errorf("received '%s' event but received '%s'", receivedEvent.Name, expectedEventName)
-		}
-	}
-
-	return ctx, nil
 }
 
 func TestFeatures(t *testing.T) {
@@ -143,5 +124,4 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the system is in state "(\S+)"$`, aMachineInState)
 	ctx.Step(`^the system "([^"]*)" is requested$`, theCommandIsCast)
 	ctx.Step(`^the request is ignored$`, theRequestIsIgnored)
-	ctx.Step(`^the following events can be observed:$`, theFollowingEventsCanBeObserved)
 }
