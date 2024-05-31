@@ -3,4 +3,5 @@
   functions = "functions"
   publish = "site"
 [build.environment]
+  GO_VERSION = 1.22
   GO_IMPORT_PATH = "github.com/d-led/mermaidlive"
