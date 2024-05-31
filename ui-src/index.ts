@@ -93,6 +93,13 @@ function showLastEvent(text: string) {
   replaceText("#last-event", text);
 }
 
+function showVisitorsActive(count: number) {
+  if (count == null) {
+    return;
+  }
+  replaceText("#visitors-active", count);
+}
+
 function bindGraphClicks() {
   $("span.edgeLabel").wrap('<a href="#/"></a>');
   $("span.edgeLabel").on("click", function (e) {
@@ -133,6 +140,10 @@ async function processEvent(event) {
       console.log("resources updated, reloading...");
       location.reload();
       break;
+    case "VisitorsActive":
+      showVisitorsActive(event?.properties?.param);
+      // do not show this event in the log
+      return;
     default:
       await reRenderGraph("waiting", "");
       break;

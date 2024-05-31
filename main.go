@@ -44,6 +44,7 @@ func main() {
 	r.StaticFS("/ui/", fs)
 
 	fsm := NewAsyncFSM(eventPublisher)
+	visitor := NewVisitorTracker(eventPublisher)
 
 	r.POST("/commands/:command", func(ctx *gin.Context) {
 		command := ctx.Param("command")
@@ -70,8 +71,12 @@ func main() {
 	})
 
 	r.GET("/events", func(c *gin.Context) {
+		visitor.Joined()
+		defer visitor.Left()
+
 		ctx := c.Request.Context()
 		closeNotify := c.Writer.CloseNotify()
+
 		myEvents := eventPublisher.Sub(topic)
 		defer eventPublisher.Unsub(myEvents, topic)
 
