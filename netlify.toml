@@ -1,7 +1,7 @@
 [build]
-  command = "go run . -transpile && go build --tags=embed -v ."
+  command = "./build.sh"
   functions = "functions"
-  publish = "site"
+  publish = "dist"
 [build.environment]
   GO_VERSION = "1.22.3"
   GO_IMPORT_PATH = "github.com/d-led/mermaidlive"
