@@ -7,6 +7,8 @@ import (
 	"github.com/evanw/esbuild/pkg/api"
 )
 
+const topic = "events"
+
 func crashOnError(err error) {
 	if err != nil {
 		panic(err)

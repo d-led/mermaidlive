@@ -18,13 +18,19 @@ type listenerKey struct{}
 var errSutNotFound = errors.New("SUT not found, check step definitions")
 var errListenerNotFound = errors.New("listener not found, check step definitions")
 
-func aMachineInState(ctx context.Context, state string) (context.Context, error) {
-	observer := pubsub.New[string, Event](10 /*enough to buffer between steps*/)
-	ctx = context.WithValue(ctx, observerKey{}, observer)
-	sut := NewCustomAsyncFSM(observer, 100*time.Millisecond)
-	ctx = context.WithValue(ctx, sutKey{}, sut)
-	listener := observer.Sub(topic)
-	ctx = context.WithValue(ctx, listenerKey{}, listener)
+func startFromMachineInState(ctx context.Context, state string) (context.Context, error) {
+	const delay = 10 * time.Millisecond
+	// enough to buffer between steps
+	const pubSubChannelCapacity = 10
+	ctx, _ = configureSUT(ctx, delay, pubSubChannelCapacity)
+	return ctx, theSystemIsFoundInState(ctx, state)
+}
+
+func theSystemIsFoundInState(ctx context.Context, state string) error {
+	sut, ok := ctx.Value(sutKey{}).(*AsyncFSM)
+	if !ok {
+		return errSutNotFound
+	}
 
 	var err error
 
@@ -37,7 +43,19 @@ func aMachineInState(ctx context.Context, state string) (context.Context, error)
 		err = errors.New("unknown state: " + state)
 	}
 
-	return ctx, err
+	return err
+}
+
+func configureSUT(ctx context.Context,
+	delay time.Duration,
+	pubSubChannelCapacity int) (context.Context, *AsyncFSM) {
+	observer := pubsub.New[string, Event](pubSubChannelCapacity)
+	ctx = context.WithValue(ctx, observerKey{}, observer)
+	sut := NewCustomAsyncFSM(observer, delay)
+	ctx = context.WithValue(ctx, sutKey{}, sut)
+	listener := observer.Sub(topic)
+	ctx = context.WithValue(ctx, listenerKey{}, listener)
+	return ctx, sut
 }
 
 func theCommandIsCast(ctx context.Context, command string) (context.Context, error) {
@@ -60,29 +78,24 @@ func theCommandIsCast(ctx context.Context, command string) (context.Context, err
 	return ctx, err
 }
 
-func someWorkHasProgressed() error {
-	return godog.ErrPending
+func someWorkHasProgressed(ctx context.Context) error {
+	_, err := receiveEventsTill(ctx, "Tick", 1*time.Second)
+	return err
 }
 
-func workIsCanceled() error {
-	return godog.ErrPending
+func workIsCanceled(ctx context.Context) error {
+	_, err := receiveEventsTill(ctx, "WorkAborted", 1*time.Second)
+	return err
 }
 
 func theRequestIsIgnored(ctx context.Context) error {
-	events, err := receiveEventsTill(ctx, "RequestIgnored", 1*time.Second)
-	if err != nil {
-		return err
-	}
-	return expectToFindEvent(events, "RequestIgnored")
+	_, err := receiveEventsTill(ctx, "RequestIgnored", 1*time.Second)
+	return err
 }
 
-func expectToFindEvent(events []Event, event string) error {
-	for _, receivedEvent := range events {
-		if receivedEvent.Name == event {
-			return nil
-		}
-	}
-	return errors.New("Expected to see a 'RequestIgnored' but it hasn't been published")
+func workIsCompleted(ctx context.Context) error {
+	_, err := receiveEventsTill(ctx, "WorkDone", 1*time.Second)
+	return err
 }
 
 func receiveEventsTill(ctx context.Context, event string, timeout time.Duration) ([]Event, error) {
@@ -95,6 +108,8 @@ func receiveEventsTill(ctx context.Context, event string, timeout time.Duration)
 		return res, errListenerNotFound
 	}
 
+	timedOut := time.After(timeout)
+
 	for {
 		select {
 		case receivedEvent := <-listener:
@@ -102,8 +117,9 @@ func receiveEventsTill(ctx context.Context, event string, timeout time.Duration)
 			if receivedEvent.Name == event {
 				done = true
 			}
-		case <-time.After(timeout):
+		case <-timedOut:
 			err = errors.New("timed out waiting for event: " + event)
+			done = true
 		}
 		if done {
 			break
@@ -138,9 +154,11 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		ctx = context.WithValue(ctx, listenerKey{}, nil)
 		return ctx, nil
 	})
-	ctx.Step(`^the system is in state "(\S+)"$`, aMachineInState)
+	ctx.Step(`^a system in state "(\S+)"$`, startFromMachineInState)
+	ctx.Step(`^the system is found in state "([^"]*)"$`, theSystemIsFoundInState)
 	ctx.Step(`^the system "([^"]*)" is requested$`, theCommandIsCast)
 	ctx.Step(`^the request is ignored$`, theRequestIsIgnored)
 	ctx.Step(`^some work has progressed$`, someWorkHasProgressed)
+	ctx.Step(`^work is completed$`, workIsCompleted)
 	ctx.Step(`^work is canceled$`, workIsCanceled)
 }

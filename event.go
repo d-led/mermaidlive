@@ -2,8 +2,6 @@ package main
 
 import "time"
 
-const topic = "events"
-
 type Event struct {
 	Timestamp  string         `json:"timestamp"`
 	Name       string         `json:"name"`
