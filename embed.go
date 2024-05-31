@@ -6,6 +6,8 @@ package main
 import (
 	"io"
 	"log"
+
+	"github.com/cskr/pubsub/v2"
 )
 
 func init() {
@@ -19,6 +21,6 @@ func (n *noop) Close() error {
 	return nil
 }
 
-func startWatching() io.Closer {
+func startWatching(_ *pubsub.PubSub[string, Event]) io.Closer {
 	return &noop{}
 }
