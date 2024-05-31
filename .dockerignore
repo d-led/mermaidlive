@@ -1,0 +1,5 @@
+node_modules/
+features/
+test/
+.idea/
+docs/
