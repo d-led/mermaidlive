@@ -1,7 +1,0 @@
-[build]
-  command = "./build.sh"
-  functions = "functions"
-  publish = "dist"
-[build.environment]
-  GO_VERSION = "1.22.3"
-  GO_IMPORT_PATH = "github.com/d-led/mermaidlive"
