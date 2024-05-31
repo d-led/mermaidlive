@@ -100,6 +100,10 @@ function showVisitorsActive(count: number) {
   replaceText("#visitors-active", `${count}`);
 }
 
+function showServerRevision(text: string) {
+  replaceText("#server-revision", text);
+}
+
 function bindGraphClicks() {
   $("span.edgeLabel").wrap('<a href="#/"></a>');
   $("span.edgeLabel").on("click", function (e) {
@@ -140,9 +144,13 @@ async function processEvent(event) {
       console.log("resources updated, reloading...");
       location.reload();
       break;
+
     case "VisitorsActive":
       showVisitorsActive(event?.properties?.param);
       // do not show this event in the log
+      return;
+    case "Revision":
+      showServerRevision(event?.properties?.param);
       return;
     default:
       await reRenderGraph("waiting", "");
