@@ -97,7 +97,7 @@ function showVisitorsActive(count: number) {
   if (count == null) {
     return;
   }
-  replaceText("#visitors-active", count);
+  replaceText("#visitors-active", `${count}`);
 }
 
 function bindGraphClicks() {
