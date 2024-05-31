@@ -3,7 +3,6 @@ package main
 import (
 	"embed"
 	"flag"
-	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -18,6 +17,7 @@ const dist = "dist"
 
 var doEmbed = false
 var transpileOnly *bool
+var port *string
 
 //go:embed dist/*
 var embeddedDist embed.FS
@@ -39,72 +39,8 @@ func main() {
 		defer watcher.Close()
 	}
 
-	r := gin.Default()
-	fs := getFS()
-	r.StaticFS("/ui/", fs)
-
-	fsm := NewAsyncFSM(eventPublisher)
-	visitor := NewVisitorTracker(eventPublisher)
-
-	r.POST("/commands/:command", func(ctx *gin.Context) {
-		command := ctx.Param("command")
-		log.Println("command called:", command)
-		switch command {
-		case "start":
-			fsm.StartWork()
-			ctx.JSON(http.StatusOK, gin.H{})
-			return
-		case "abort":
-			fsm.AbortWork()
-			ctx.JSON(http.StatusOK, gin.H{})
-			return
-		default:
-			msg := "unknown command: '" + command + "'"
-			fsm.events.Pub(NewEventWithReason("CommandRejected", msg), topic)
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"result":  "rejected",
-				"command": command,
-				"reason":  msg,
-			})
-			return
-		}
-	})
-
-	r.GET("/events", func(c *gin.Context) {
-		visitor.Joined()
-		defer visitor.Left()
-
-		ctx := c.Request.Context()
-		closeNotify := c.Writer.CloseNotify()
-
-		myEvents := eventPublisher.Sub(topic)
-		defer eventPublisher.Unsub(myEvents, topic)
-
-		streamOneEvent(c, NewSimpleEvent("StartedListening"))
-		streamOneEvent(c, timestampEvent())
-
-		// callback returns false on end of processing
-		c.Stream(func(w io.Writer) bool {
-			select {
-			case <-ctx.Done():
-				log.Printf("client disconnected")
-				return false
-
-			case <-closeNotify:
-				log.Printf("client closed the connection")
-				return false
-
-			case event := <-myEvents:
-				streamOneEvent(c, event)
-
-				return true
-			}
-		})
-	})
-
-	log.Printf("http://localhost:8080/ui")
-
-	r.Run()
+	server := NewServerWithOptions(*port, eventPublisher, getFS())
+	server.Run()
 }
 
 func getFS() http.FileSystem {
@@ -142,4 +78,8 @@ func streamOneEvent(c *gin.Context, event any) {
 
 func init() {
 	transpileOnly = flag.Bool("transpile", false, "transpile only and exit")
+	port = flag.String("port", "8080", "port to run on")
+	if portFromEnv, ok := os.LookupEnv("PORT"); ok {
+		*port = portFromEnv
+	}
 }
