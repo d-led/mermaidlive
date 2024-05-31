@@ -1,5 +1,5 @@
 [build]
-  command = "go run . -transpile && go build --tags=embed -v -o /run-app ."
+  command = "go run . -transpile && go build --tags=embed -v ."
   functions = "functions"
   publish = "site"
 [build.environment]
