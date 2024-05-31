@@ -56,3 +56,7 @@ go test -v ./...
 
 - [Mermaid API](https://mermaid.js.org/config/setup/modules/mermaidAPI.html)
 - [JSON Streaming](https://en.wikipedia.org/wiki/JSON_streaming)
+
+## Deployment
+
+- currently deployed on [fly.io](https://fly.io/) &rarr; [mermaidlive.fly.dev](https://mermaidlive.fly.dev/)
