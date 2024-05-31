@@ -42,6 +42,9 @@ func (s *Server) Run() {
 }
 
 func (s *Server) setupRoutes() {
+	s.server.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusFound, "/ui")
+	})
 	s.server.StaticFS("/ui/", s.fs)
 
 	s.server.POST("/commands/:command", func(ctx *gin.Context) {
