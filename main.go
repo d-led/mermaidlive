@@ -64,12 +64,6 @@ func getEmbeddedFS() http.FileSystem {
 	return http.FS(sub)
 }
 
-func timestampEvent() gin.H {
-	return gin.H{
-		"timestamp": now(),
-	}
-}
-
 func streamOneEvent(c *gin.Context, event any) {
 	c.JSON(http.StatusOK, event)
 	c.String(http.StatusOK, "\n")
