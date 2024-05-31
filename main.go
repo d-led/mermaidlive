@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/carlmjohnson/versioninfo"
 	"github.com/cskr/pubsub/v2"
 	"github.com/gin-gonic/gin"
 )
@@ -37,6 +38,10 @@ func main() {
 		refresh()
 		watcher := startWatching(eventPublisher)
 		defer watcher.Close()
+	}
+
+	if !versioninfo.DirtyBuild {
+		log.Println("Revision:", versioninfo.Revision)
 	}
 
 	server := NewServerWithOptions(*port, eventPublisher, getFS())
