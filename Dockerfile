@@ -5,10 +5,18 @@ WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY . .
-RUN go run . -transpile && go build --tags=embed -v -o /run-app .
+RUN go run . -transpile && CGO_ENABLED=0 go build --tags=embed -v -o /run-app .
 
+FROM alpine:latest as alpine
+# create a user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-FROM debian:bookworm
+FROM scratch
+WORKDIR /
 
-COPY --from=builder /run-app /usr/local/bin/
-CMD ["run-app"]
+# copy the user
+COPY --from=alpine /etc/passwd /etc/passwd
+USER appuser
+
+COPY --from=builder /run-app /
+CMD ["./run-app"]
