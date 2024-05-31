@@ -25,6 +25,21 @@ to build a binary with embedded UI:
 ```shell
 go build --tags=embed .
 ```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Server --serves---> UI
+    StateMachine --runs on --> Server
+    UI --posts commands to --> Server
+    Server --forwards commands to -->StateMachine
+    Server --publishes events to -->PubSub
+    StateMachine --publishes events to -->PubSub
+    Server --subscribes each connected client to -->PubSub
+    Server --streams events to --> UI
+```
+
 ## Testing
 
 - WIP
