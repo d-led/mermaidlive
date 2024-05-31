@@ -1,3 +1,17 @@
 .monospaced {
   font-family: "Courier New", Courier, monospace;
 }
+
+/*
+ https://stackoverflow.com/a/52463416/847349
+ */
+table.table-fit {
+  width: auto !important;
+  table-layout: auto !important;
+}
+table.table-fit thead th,
+table.table-fit tbody td,
+table.table-fit tfoot th,
+table.table-fit tfoot td {
+  width: auto !important;
+}

@@ -35,15 +35,30 @@
         </div>
 
         <h4>Server-side updates & feedback</h4>
-        <div class="d-flex flex-row mt-2 mb-2">
-            <p class="monospaced">Last event     : <span id="last-event"></p>
-        </div>
-        <div class="d-flex flex-row mt-2 mb-2">
-          <p class="monospaced">Last error     : <span id="delayed-text"></span></p>
-        </div>
-        <div class="d-flex flex-row mt-2 mb-2">
-          <p class="monospaced">Visitors active on this server: <span id="visitors-active"></span></p>
-        </div>
+
+        <div class="table-responsive-sm d-flex flex-row mt-2 mb-2">
+        <table class="table table-fit">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col" style="display: none;">Info</th>
+              <th scope="col" style="display: none;">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="monospaced">
+              <td>Last event</td>
+              <td><span id="last-event"></p></td>
+            </tr>
+            <tr class="monospaced">
+              <td>Last error</td>
+              <td><span id="delayed-text"></span></td>
+            </tr>
+            <tr class="monospaced">
+              <td>Visitors active on this server</td>
+              <td><span id="visitors-active"></span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </main>
     <script type="module">
