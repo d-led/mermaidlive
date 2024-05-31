@@ -16,5 +16,8 @@ primary_region = 'ams'
   min_machines_running = 0
   processes = ['app']
 
+[env]
+ GIN_MODE="release"
+
 [[vm]]
   size = 'shared-cpu-1x'
