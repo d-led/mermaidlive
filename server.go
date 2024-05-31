@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/cskr/pubsub/v2"
 	"github.com/gin-gonic/gin"
@@ -77,8 +78,8 @@ func (s *Server) setupRoutes() {
 		myEvents := s.events.Sub(topic)
 		defer s.events.Unsub(myEvents, topic)
 
+		streamOneEvent(c, NewEventWithParam("ConnectedToRegion", getRegion()))
 		streamOneEvent(c, NewSimpleEvent("StartedListening"))
-		streamOneEvent(c, timestampEvent())
 
 		// callback returns false on end of processing
 		c.Stream(func(w io.Writer) bool {
@@ -107,4 +108,11 @@ func (s *Server) getUIUrl() string {
 
 func configureGin() *gin.Engine {
 	return gin.Default()
+}
+
+func getRegion() string {
+	if region, ok := os.LookupEnv("FLY_REGION"); ok {
+		return region
+	}
+	return "local"
 }
