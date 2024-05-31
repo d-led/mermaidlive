@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/carlmjohnson/versioninfo"
 	"github.com/cskr/pubsub/v2"
 	"github.com/gin-gonic/gin"
 )
@@ -82,6 +83,7 @@ func (s *Server) setupRoutes() {
 		defer s.events.Unsub(myEvents, topic)
 
 		streamOneEvent(c, NewEventWithParam("ConnectedToRegion", getRegion()))
+		streamOneEvent(c, NewEventWithParam("Revision", versioninfo.Revision))
 		streamOneEvent(c, NewSimpleEvent("StartedListening"))
 
 		// callback returns false on end of processing
