@@ -56,6 +56,8 @@ go test -v ./...
 
 - [Mermaid API](https://mermaid.js.org/config/setup/modules/mermaidAPI.html)
 - [JSON Streaming](https://en.wikipedia.org/wiki/JSON_streaming)
+- Identifiable concurrent processes are modeled with [phony (Go)](https://github.com/Arceliar/phony)
+- Distributing shared state from the server to client connections via [Pub/Sub](https://github.com/cskr/pubsub)
 
 ## Deployment
 
