@@ -1,4 +1,4 @@
-package main
+package mermaidlive
 
 import (
 	"fmt"
@@ -36,10 +36,10 @@ func NewServerWithOptions(port string,
 	return server
 }
 
-func (s *Server) Run() {
-	log.Printf("Server running at :%v", *port)
+func (s *Server) Run(port string) {
+	log.Printf("Server running at :%v", port)
 	log.Printf("Visit the UI at %s", s.getUIUrl())
-	log.Println(s.server.Run(":" + *port))
+	log.Println(s.server.Run(":" + port))
 }
 
 func (s *Server) setupRoutes() {
@@ -48,12 +48,17 @@ func (s *Server) setupRoutes() {
 	})
 	s.server.StaticFS("/ui/", s.fs)
 
+	s.server.GET("/machine/state", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, s.fsm.CurrentState())
+	})
+
 	s.server.POST("/commands/:command", func(ctx *gin.Context) {
 		command := ctx.Param("command")
 		log.Println("command called:", command)
 		switch command {
 		case "start":
 			s.fsm.StartWork()
+			// to do: consider using HTTP 201 Created
 			ctx.JSON(http.StatusOK, gin.H{})
 			return
 		case "abort":
@@ -62,7 +67,7 @@ func (s *Server) setupRoutes() {
 			return
 		default:
 			msg := "unknown command: '" + command + "'"
-			s.fsm.events.Pub(NewEventWithReason("CommandRejected", msg), topic)
+			s.fsm.events.Pub(NewEventWithReason("CommandRejected", msg), Topic)
 			ctx.JSON(http.StatusBadRequest, gin.H{
 				"result":  "rejected",
 				"command": command,
@@ -79,8 +84,8 @@ func (s *Server) setupRoutes() {
 		ctx := c.Request.Context()
 		closeNotify := c.Writer.CloseNotify()
 
-		myEvents := s.events.Sub(topic)
-		defer s.events.Unsub(myEvents, topic)
+		myEvents := s.events.Sub(Topic)
+		defer s.events.Unsub(myEvents, Topic)
 
 		streamOneEvent(c, NewEventWithParam("ConnectedToRegion", getRegion()))
 		streamOneEvent(c, NewEventWithParam("Revision", versioninfo.Revision))
@@ -120,4 +125,10 @@ func getRegion() string {
 		return region
 	}
 	return "local"
+}
+
+func streamOneEvent(c *gin.Context, event any) {
+	c.JSON(http.StatusOK, event)
+	c.String(http.StatusOK, "\n")
+	c.Writer.(http.Flusher).Flush()
 }

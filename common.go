@@ -1,4 +1,4 @@
-package main
+package mermaidlive
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/evanw/esbuild/pkg/api"
 )
 
-const topic = "events"
+const Topic = "events"
 
 func crashOnError(err error) {
 	if err != nil {

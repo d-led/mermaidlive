@@ -1,15 +1,26 @@
-package main
+//go:build !api_test
+// +build !api_test
+
+package mermaidlive
 
 import (
 	"context"
 	"errors"
 	"log"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/cskr/pubsub/v2"
 	"github.com/cucumber/godog"
+	"github.com/cucumber/godog/colors"
 )
+
+var opts = godog.Options{
+	Output: colors.Colored(os.Stdout),
+	Format: "pretty",
+	Tags:   "~@api",
+}
 
 type sutKey struct{}
 type observerKey struct{}
@@ -53,7 +64,7 @@ func configureSUT(ctx context.Context,
 	ctx = context.WithValue(ctx, observerKey{}, observer)
 	sut := NewCustomAsyncFSM(observer, delay)
 	ctx = context.WithValue(ctx, sutKey{}, sut)
-	listener := observer.Sub(topic)
+	listener := observer.Sub(Topic)
 	ctx = context.WithValue(ctx, listenerKey{}, listener)
 	return ctx, sut
 }
@@ -128,14 +139,10 @@ func receiveEventsTill(ctx context.Context, event string, timeout time.Duration)
 	return res, err
 }
 
-func TestFeatures(t *testing.T) {
+func TestUnit(t *testing.T) {
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
-		Options: &godog.Options{
-			Format:   "pretty",
-			Paths:    []string{"features"},
-			TestingT: t, // Testing instance that will run subtests.
-		},
+		Options:             &opts,
 	}
 
 	if suite.Run() != 0 {
@@ -149,7 +156,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		observer, ok2 := ctx.Value(observerKey{}).(*pubsub.PubSub[string, Event])
 		if ok1 && listener != nil && ok2 && observer != nil {
 			log.Println("unsubscribing listener")
-			observer.Unsub(listener, topic)
+			observer.Unsub(listener, Topic)
 		}
 		ctx = context.WithValue(ctx, listenerKey{}, nil)
 		return ctx, nil

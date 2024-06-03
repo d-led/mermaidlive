@@ -1,4 +1,4 @@
-package main
+package mermaidlive
 
 import (
 	"context"
@@ -34,11 +34,11 @@ func NewCustomAsyncFSM(events *pubsub.PubSub[string, Event], delay time.Duration
 func (fsm *AsyncFSM) StartWork() {
 	fsm.Act(fsm, func() {
 		if fsm.currentCount != 0 {
-			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot start: machine busy"), topic)
+			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot start: machine busy"), Topic)
 			return
 		}
 		fsm.ctx, fsm.cancel = context.WithCancel(context.Background())
-		fsm.events.Pub(NewSimpleEvent("WorkStarted"), topic)
+		fsm.events.Pub(NewSimpleEvent("WorkStarted"), Topic)
 		fsm.currentCount = 10
 		go fsm.tick()
 	})
@@ -48,11 +48,11 @@ func (fsm *AsyncFSM) StartWork() {
 func (fsm *AsyncFSM) AbortWork() {
 	fsm.Act(fsm, func() {
 		if fsm.currentCount == 0 {
-			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot abort: machine not busy"), topic)
+			fsm.events.Pub(NewEventWithReason("RequestIgnored", "cannot abort: machine not busy"), Topic)
 			return
 		}
 		fsm.cancel()
-		fsm.events.Pub(NewSimpleEvent("WorkAbortRequested"), topic)
+		fsm.events.Pub(NewSimpleEvent("WorkAbortRequested"), Topic)
 	})
 	log.Println("AbortWork finished")
 }
@@ -64,19 +64,19 @@ func (fsm *AsyncFSM) tick() {
 		case <-fsm.ctx.Done():
 			go func() {
 				time.Sleep(fsm.delay)
-				fsm.events.Pub(NewSimpleEvent("WorkAborted"), topic)
+				fsm.events.Pub(NewSimpleEvent("WorkAborted"), Topic)
 			}()
 			fsm.currentCount = 0
 			return
 		default:
 			// not canceled yet
 		}
-		fsm.events.Pub(NewEventWithParam("Tick", fsm.currentCount), topic)
+		fsm.events.Pub(NewEventWithParam("Tick", fsm.currentCount), Topic)
 		fsm.currentCount--
 		if fsm.currentCount == 0 {
 			go func() {
 				time.Sleep(fsm.delay)
-				fsm.events.Pub(NewSimpleEvent("WorkDone"), topic)
+				fsm.events.Pub(NewSimpleEvent("WorkDone"), Topic)
 			}()
 			return
 		}
@@ -89,11 +89,22 @@ func (fsm *AsyncFSM) tick() {
 
 // sync queries - not to be used from within actor behaviors (methods)
 func (fsm *AsyncFSM) IsWaiting() bool {
+	return fsm.getCurrentCount() == 0
+}
+
+func (fsm *AsyncFSM) CurrentState() string {
+	if fsm.IsWaiting() {
+		return "waiting"
+	}
+	return "unknown"
+}
+
+func (fsm *AsyncFSM) getCurrentCount() uint8 {
 	var currentCount uint8
 	phony.Block(fsm, func() {
 		currentCount = fsm.currentCount
 	})
-	return currentCount == 0
+	return currentCount
 }
 
 func noOp() context.CancelFunc {

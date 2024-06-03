@@ -1,7 +1,7 @@
 //go:build embed
 // +build embed
 
-package main
+package mermaidlive
 
 import (
 	"io"

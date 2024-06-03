@@ -1,4 +1,4 @@
-package main
+package mermaidlive
 
 import (
 	"log"
@@ -8,7 +8,7 @@ import (
 	"github.com/evanw/esbuild/pkg/api"
 )
 
-func refresh() {
+func Refresh() {
 	log.Println("transpiling & copying")
 	transpile()
 	copyStatic()

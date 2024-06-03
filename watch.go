@@ -1,7 +1,7 @@
 //go:build !embed
 // +build !embed
 
-package main
+package mermaidlive
 
 import (
 	"log"
@@ -14,7 +14,7 @@ func init() {
 	log.Println("using filesystem resources")
 }
 
-func startWatching(eventPublisher *pubsub.PubSub[string, Event]) *fsnotify.Watcher {
+func StartWatching(eventPublisher *pubsub.PubSub[string, Event]) *fsnotify.Watcher {
 	watcher, err := fsnotify.NewWatcher()
 	crashOnError(err)
 
@@ -28,8 +28,8 @@ func startWatching(eventPublisher *pubsub.PubSub[string, Event]) *fsnotify.Watch
 				}
 				if event.Has(fsnotify.Write) {
 					log.Println("modified: ", event.Name)
-					refresh()
-					eventPublisher.Pub(NewSimpleEvent("ResourcesRefreshed"), topic)
+					Refresh()
+					eventPublisher.Pub(NewSimpleEvent("ResourcesRefreshed"), Topic)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {

@@ -1,4 +1,4 @@
-package main
+package mermaidlive
 
 import (
 	"github.com/Arceliar/phony"
@@ -20,13 +20,13 @@ func NewVisitorTracker(events *pubsub.PubSub[string, Event]) *VisitorTracker {
 func (v *VisitorTracker) Joined() {
 	v.Act(v, func() {
 		v.visitorsActive++
-		v.events.Pub(NewEventWithParam("VisitorsActive", v.visitorsActive), topic)
+		v.events.Pub(NewEventWithParam("VisitorsActive", v.visitorsActive), Topic)
 	})
 }
 
 func (v *VisitorTracker) Left() {
 	v.Act(v, func() {
 		v.visitorsActive--
-		v.events.Pub(NewEventWithParam("VisitorsActive", v.visitorsActive), topic)
+		v.events.Pub(NewEventWithParam("VisitorsActive", v.visitorsActive), Topic)
 	})
 }

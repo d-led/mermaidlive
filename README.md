@@ -3,7 +3,7 @@
 ## Running
 
 ```bash
-go run .
+go run ./cmd/mermaidlive
 ```
 
 &darr;
@@ -17,7 +17,7 @@ go run .
 to only generate UI resources from [ui-src](./ui-src), run:
 
 ```shell
-go run . -transpile
+go run ./cmd/mermaidlive -transpile
 ```
 
 to build a binary with embedded UI:
@@ -50,6 +50,14 @@ flowchart LR
 
 ```shell
 go test -v ./...
+```
+
+### API-based
+
+- the test starts a temporary server instance and runs the tests against it
+
+```shell
+go test -tags=api_test -v  ./...
 ```
 
 ## Approach

@@ -1,4 +1,4 @@
-package main
+package mermaidlive
 
 import "time"
 
