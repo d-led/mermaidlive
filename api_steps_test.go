@@ -80,7 +80,7 @@ func theSystemIsRequested(ctx context.Context, command string) error {
 	return client.PostCommand(command)
 }
 
-func twoClientsHaveObservedTheSameEvents(ctx context.Context) error {
+func twoClientsHaveObserved(ctx context.Context, eventName string) error {
 	client1, err := getClient(ctx)
 	if err != nil {
 		return err
@@ -90,12 +90,12 @@ func twoClientsHaveObservedTheSameEvents(ctx context.Context) error {
 		return err
 	}
 
-	err = client1.WaitForEventSeen("WorkDone")
+	err = client1.WaitForEventSeen(eventName)
 	if err != nil {
 		return err
 	}
 
-	err = client2.WaitForEventSeen("WorkDone")
+	err = client2.WaitForEventSeen(eventName)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the request is ignored$`, theRequestIsIgnored)
 	ctx.Step(`^the system is found in state "([^"]*)"$`, theSystemIsFoundInState)
 	ctx.Step(`^the system "([^"]*)" is requested$`, theSystemIsRequested)
-	ctx.Step(`^two clients have observed the same events$`, twoClientsHaveObservedTheSameEvents)
+	ctx.Step(`^two clients have observed "([^"]*)"$`, twoClientsHaveObserved)
 	ctx.Step(`^two connected clients$`, twoConnectedClients)
 	ctx.Step(`^work is canceled$`, workIsCanceled)
 	ctx.Step(`^work is completed$`, workIsCompleted)
