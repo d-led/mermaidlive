@@ -51,12 +51,25 @@ func someWorkHasProgressed(ctx context.Context) error {
 	return client.WaitForEventSeen("Tick")
 }
 
-func theRequestIsIgnored() error {
-	return godog.ErrPending
+func theRequestIsIgnored(ctx context.Context) error {
+	client, err := getClient(ctx)
+	if err != nil {
+		return err
+	}
+	return client.WaitForEventSeen("RequestIgnored")
 }
 
-func theSystemIsFoundInState(arg1 string) error {
-	return godog.ErrPending
+func theSystemIsFoundInState(ctx context.Context, state string) error {
+	client, err := getClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := client.WaitForState(state); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func theSystemIsRequested(ctx context.Context, command string) error {
@@ -79,8 +92,12 @@ func workIsCanceled() error {
 	return godog.ErrPending
 }
 
-func workIsCompleted() error {
-	return godog.ErrPending
+func workIsCompleted(ctx context.Context) error {
+	client, err := getClient(ctx)
+	if err != nil {
+		return err
+	}
+	return client.WaitForEventSeen("WorkDone")
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
