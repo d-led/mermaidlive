@@ -187,3 +187,7 @@ dist
 .idea/
 mermaidlive
 *.exe
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -1,9 +1,15 @@
 {
   "scripts": {
-    "prettier": "prettier -w ."
+    "prettier": "prettier -w .",
+    "test": "npx playwright test",
+    "test:show-report":"npx playwright show-report"
   },
   "dependencies": {
     "@types/jquery": "^3.5.30",
     "prettier": "^3.2.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.1",
+    "@types/node": "^20.14.0"
   }
 }
