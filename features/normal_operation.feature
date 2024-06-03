@@ -1,5 +1,4 @@
 Feature: Normal operation
-    @only
     Scenario: Running the machine to completion
         Given a system in state "waiting"
         When the system "start" is requested

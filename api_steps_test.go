@@ -18,7 +18,7 @@ import (
 var opts = godog.Options{
 	Output: colors.Colored(os.Stdout),
 	Format: "pretty",
-	Tags:   "~@ui && @only",
+	Tags:   "~@ui",
 }
 
 const testPort = "8081"
