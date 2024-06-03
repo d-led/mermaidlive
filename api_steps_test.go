@@ -19,7 +19,7 @@ import (
 var opts = godog.Options{
 	Output: colors.Colored(os.Stdout),
 	Format: "pretty",
-	Tags:   "~@ui",
+	Tags:   "~@ui && @only",
 }
 
 const testPort = "8081"
@@ -43,8 +43,12 @@ func aSystemInState(ctx context.Context, state string) (context.Context, error) 
 	return ctx, err
 }
 
-func someWorkHasProgressed() error {
-	return godog.ErrPending
+func someWorkHasProgressed(ctx context.Context) error {
+	client, err := getClient(ctx)
+	if err != nil {
+		return err
+	}
+	return client.WaitForEventSeen("Tick")
 }
 
 func theRequestIsIgnored() error {
