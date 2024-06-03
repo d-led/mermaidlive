@@ -14,9 +14,12 @@
             "keyword": "Given ",
             "line": 3,
             "name": "a system in state \"waiting\"",
+            "match": {
+              "location": "src/steps/ui.steps.ts:3"
+            },
             "result": {
-              "status": "undefined",
-              "duration": 0
+              "status": "pending",
+              "duration": 838457
             }
           },
           {
@@ -65,9 +68,12 @@
             "keyword": "Given ",
             "line": 9,
             "name": "a system in state \"waiting\"",
+            "match": {
+              "location": "src/steps/ui.steps.ts:3"
+            },
             "result": {
-              "status": "undefined",
-              "duration": 0
+              "status": "pending",
+              "duration": 68166
             }
           },
           {
@@ -147,9 +153,12 @@
             "keyword": "Given ",
             "line": 4,
             "name": "a system in state \"waiting\"",
+            "match": {
+              "location": "src/steps/ui.steps.ts:3"
+            },
             "result": {
-              "status": "undefined",
-              "duration": 0
+              "status": "pending",
+              "duration": 56750
             }
           },
           {
@@ -213,9 +222,12 @@
             "keyword": "Given ",
             "line": 11,
             "name": "a system in state \"waiting\"",
+            "match": {
+              "location": "src/steps/ui.steps.ts:3"
+            },
             "result": {
-              "status": "undefined",
-              "duration": 0
+              "status": "pending",
+              "duration": 111374
             }
           },
           {
@@ -315,9 +327,12 @@
             "keyword": "Given ",
             "line": 3,
             "name": "a system in state \"waiting\"",
+            "match": {
+              "location": "src/steps/ui.steps.ts:3"
+            },
             "result": {
-              "status": "undefined",
-              "duration": 0
+              "status": "pending",
+              "duration": 62208
             }
           },
           {
@@ -397,9 +412,12 @@
             "keyword": "Given ",
             "line": 3,
             "name": "a system in state \"waiting\"",
+            "match": {
+              "location": "src/steps/ui.steps.ts:3"
+            },
             "result": {
-              "status": "undefined",
-              "duration": 0
+              "status": "pending",
+              "duration": 48000
             }
           },
           {
