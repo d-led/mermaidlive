@@ -125,9 +125,12 @@ async function processEvent(event) {
   let eventLine = formatEventIntoOneLine(event);
 
   switch (event.name) {
-    case "WorkStarted":
     case "WorkDone":
+    case "WorkAborted":
       await reRenderGraph("waiting", "");
+      break;
+    case "WorkStarted":
+      await reRenderGraph("working", `...`);
       break;
     case "Tick":
       await reRenderGraph("working", ` ${event?.properties?.param}`);
