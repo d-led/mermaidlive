@@ -43,8 +43,13 @@ flowchart LR
 ## Testing
 
 - WIP
-- "test-after" as a spike in itself
-- the demo revolves around reusing the [specification](./features/)
+- "test-after":
+  - the [specification](./features/) contains shared steps
+  - state machine-level [test steps](./unit_steps_test.go)
+    - exececise the async state machine
+  - API-level [test steps](./api_steps_test.go)
+    - start the server at port `8081`
+    - exercise the specification, including scenarios tagged with `@api`
 
 ### Unit
 
