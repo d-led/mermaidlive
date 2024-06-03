@@ -80,8 +80,27 @@ func theSystemIsRequested(ctx context.Context, command string) error {
 	return client.PostCommand(command)
 }
 
-func twoClientsHaveObservedTheSameEvents() error {
-	return godog.ErrPending
+func twoClientsHaveObservedTheSameEvents(ctx context.Context) error {
+	client1, err := getClient(ctx)
+	if err != nil {
+		return err
+	}
+	client2, err := getSecondClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = client1.WaitForEventSeen("WorkDone")
+	if err != nil {
+		return err
+	}
+
+	err = client2.WaitForEventSeen("WorkDone")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func twoConnectedClients(ctx context.Context) (context.Context, error) {
@@ -90,8 +109,12 @@ func twoConnectedClients(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func workIsCanceled() error {
-	return godog.ErrPending
+func workIsCanceled(ctx context.Context) error {
+	client, err := getClient(ctx)
+	if err != nil {
+		return err
+	}
+	return client.WaitForEventSeen("WorkAborted")
 }
 
 func workIsCompleted(ctx context.Context) error {
@@ -134,7 +157,15 @@ func TestApi(t *testing.T) {
 }
 
 func getClient(ctx context.Context) (*ApiClient, error) {
-	client, ok := ctx.Value(clientKey{}).(*ApiClient)
+	return getClientByKey(ctx, clientKey{})
+}
+
+func getSecondClient(ctx context.Context) (*ApiClient, error) {
+	return getClientByKey(ctx, secondClientKey{})
+}
+
+func getClientByKey(ctx context.Context, key interface{}) (*ApiClient, error) {
+	client, ok := ctx.Value(key).(*ApiClient)
 	if !ok {
 		return nil, errors.New("client not found in test context. Please check test definitions")
 	}
