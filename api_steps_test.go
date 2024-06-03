@@ -1,4 +1,3 @@
-// go:build api_test
 //go:build api_test
 // +build api_test
 
