@@ -27,6 +27,7 @@ var server *Server
 
 // context keys
 type clientKey struct{}
+type secondClientKey struct{}
 type serverKey struct{}
 
 func aSystemInState(ctx context.Context, state string) (context.Context, error) {
@@ -83,8 +84,10 @@ func twoClientsHaveObservedTheSameEvents() error {
 	return godog.ErrPending
 }
 
-func twoConnectedClients() error {
-	return godog.ErrPending
+func twoConnectedClients(ctx context.Context) (context.Context, error) {
+	client := NewApiClient("http://localhost:" + testPort)
+	ctx = context.WithValue(ctx, secondClientKey{}, client)
+	return ctx, nil
 }
 
 func workIsCanceled() error {
