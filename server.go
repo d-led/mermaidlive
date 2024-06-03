@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/carlmjohnson/versioninfo"
 	"github.com/cskr/pubsub/v2"
@@ -23,12 +24,13 @@ type Server struct {
 
 func NewServerWithOptions(port string,
 	events *pubsub.PubSub[string, Event],
-	fs http.FileSystem) *Server {
+	fs http.FileSystem,
+	delay time.Duration) *Server {
 	server := &Server{
 		port:    port,
 		server:  configureGin(),
 		events:  events,
-		fsm:     NewAsyncFSM(events),
+		fsm:     NewCustomAsyncFSM(events, delay),
 		visitor: NewVisitorTracker(events),
 		fs:      fs,
 	}

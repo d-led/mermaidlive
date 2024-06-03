@@ -1,8 +1,8 @@
 package mermaidlive
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -21,6 +21,7 @@ type ApiClient struct {
 	currentReader   io.ReadCloser
 	currentBuffer   []byte
 	currentResponse *resty.Response
+	cancel          context.CancelFunc
 	receivedEvents  []ReceivedEvent
 }
 
@@ -29,6 +30,7 @@ func NewApiClient(baseUrl string) *ApiClient {
 		baseUrl:       baseUrl,
 		c:             resty.New().SetBaseURL(baseUrl).SetTimeout(1 * time.Second),
 		currentBuffer: make([]byte, 0),
+		cancel:        func() {},
 	}
 	go client.subscribeToEvents()
 	return client
@@ -36,9 +38,10 @@ func NewApiClient(baseUrl string) *ApiClient {
 
 func (a *ApiClient) WaitForState(expectedState string) error {
 	var err error
-	phony.Block(a, func() {
-		log.Printf("Waiting for state '%s' ...", expectedState)
-		for i := 0; i < 10; i++ {
+	var found bool
+	log.Printf("Waiting for state '%s' ...", expectedState)
+	for i := 0; i < 10; i++ {
+		phony.Block(a, func() {
 			res, e := a.c.
 				R().
 				Get("/machine/state")
@@ -48,13 +51,16 @@ func (a *ApiClient) WaitForState(expectedState string) error {
 			}
 			foundState := strings.TrimSpace(string(res.Body()))
 			if expectedState == foundState {
+				found = true
 				return
 			}
 			log.Printf("Expected state '%v' but found '%v', sleeping to retry...", expectedState, foundState)
-			time.Sleep(1 * time.Second)
-		}
-		err = errors.New("could not find state " + expectedState)
-	})
+			time.Sleep(100 * time.Millisecond)
+		})
+	}
+	if !found {
+		return fmt.Errorf("could not find state: %v", expectedState)
+	}
 	return err
 }
 
@@ -85,7 +91,7 @@ func (a *ApiClient) WaitForEventSeen(eventName string) error {
 				found = true
 			}
 		})
-		time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Millisecond)
 		if found {
 			return nil
 		}
@@ -102,15 +108,15 @@ func (a *ApiClient) BaseUrl() string {
 
 func (a *ApiClient) subscribeToEvents() {
 	a.Act(a, func() {
-		if a.currentReader != nil {
-			a.currentReader.Close()
-			a.currentReader = nil
-		}
+		a.tryCloseCurrentReaderSync()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		a.cancel = cancel
 
 		var err error
 		a.currentResponse, err = a.c.
-			SetTimeout(30 * time.Second).
 			R().
+			SetContext(ctx).
 			SetDoNotParseResponse(true).
 			Get("/events")
 		if err != nil {
@@ -131,13 +137,11 @@ func (a *ApiClient) readNextEvent() {
 		buf := make([]byte, 1024)
 		n, err := a.currentReader.Read(buf)
 		if err == io.EOF {
-			a.currentReader.Close()
-			a.currentReader = nil
+			a.Close()
 			return
 		}
 		if err != nil {
-			a.currentReader.Close()
-			a.currentReader = nil
+			a.Close()
 			log.Println("error reading event stream", err)
 			return
 		}
@@ -152,9 +156,26 @@ func (a *ApiClient) readNextEvent() {
 
 func (a *ApiClient) scheduleNextReadSync() {
 	go func() {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		a.readNextEvent()
 	}()
+}
+
+func (a *ApiClient) Close() {
+	a.cancel()
+	a.Act(a, func() {
+		a.tryCloseCurrentReaderSync()
+	})
+}
+
+func (a *ApiClient) tryCloseCurrentReaderSync() {
+	if a.currentReader == nil {
+		return
+	}
+	a.currentReader.Close()
+	a.currentReader = nil
+	a.currentBuffer = make([]byte, 0)
+	a.currentResponse = nil
 }
 
 func (a *ApiClient) tryExtractEventsSync() error {

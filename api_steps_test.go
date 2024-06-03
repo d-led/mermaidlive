@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/cskr/pubsub/v2"
 	"github.com/cucumber/godog"
@@ -131,6 +132,17 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		ctx = context.WithValue(ctx, serverKey{}, server)
 		return ctx, nil
 	})
+	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		if client1, err := getClient(ctx); err == nil {
+			client1.Close()
+		}
+
+		if client2, err := getSecondClient(ctx); err == nil {
+			client2.Close()
+		}
+
+		return ctx, nil
+	})
 	ctx.Step(`^a system in state "([^"]*)"$`, aSystemInState)
 	ctx.Step(`^some work has progressed$`, someWorkHasProgressed)
 	ctx.Step(`^the request is ignored$`, theRequestIsIgnored)
@@ -175,7 +187,7 @@ func getClientByKey(ctx context.Context, key interface{}) (*ApiClient, error) {
 func startServer(testPort string) *Server {
 	log.Println("Starting a new server")
 	eventPublisher := pubsub.New[string, Event](1)
-	server = NewServerWithOptions(testPort, eventPublisher, GetFS(true))
+	server = NewServerWithOptions(testPort, eventPublisher, GetFS(true), 10*time.Millisecond)
 	go server.Run(testPort)
 	return server
 }
