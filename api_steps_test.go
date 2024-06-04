@@ -19,7 +19,7 @@ import (
 var opts = godog.Options{
 	Output: colors.Colored(os.Stdout),
 	Format: "pretty",
-	Tags:   "~@ui && @only",
+	Tags:   "~@ui",
 }
 
 const testPort = "8081"
@@ -189,7 +189,12 @@ func getClientByKey(ctx context.Context, key interface{}) (*ApiClient, error) {
 func startServer(testPort string) *Server {
 	log.Println("Starting a new server")
 	eventPublisher := pubsub.New[string, Event](1)
-	server = NewServerWithOptions(testPort, eventPublisher, GetFS(), 10*time.Millisecond)
+	server = NewServerWithOptions(
+		testPort,
+		eventPublisher,
+		GetFS(),
+		50*time.Millisecond,
+	)
 	go server.Run(testPort)
 	return server
 }
