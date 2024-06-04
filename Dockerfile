@@ -19,4 +19,4 @@ COPY --from=alpine /etc/passwd /etc/passwd
 USER appuser
 
 COPY --from=builder /run-app /
-CMD ["./run-app"]
+ENTRYPOINT [ "./run-app" ]
