@@ -15,6 +15,8 @@ var transpileOnly *bool
 var port *string
 var countdownDelayString *string
 
+// limits the amount of connected clients
+const pubSubChannelCapacity = 1024
 const defaultCountdownDelay = 800 * time.Millisecond
 
 func main() {
@@ -26,7 +28,7 @@ func main() {
 		return
 	}
 
-	eventPublisher := pubsub.New[string, mermaidlive.Event](1 /* to do: unbounded mailbox*/)
+	eventPublisher := pubsub.New[string, mermaidlive.Event](pubSubChannelCapacity /* to do: unbounded mailbox*/)
 
 	if !mermaidlive.DoEmbed {
 		mermaidlive.Refresh()
