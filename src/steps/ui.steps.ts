@@ -54,6 +54,8 @@ Given("two connected clients", async function () {
 });
 
 Then("two clients have observed {string}", async function (event: string) {
-  await lastEventSeen(this.page!, event);
-  await lastEventSeen(this.secondPage!, event);
+  await Promise.all([
+    lastEventSeen(this.page!, event),
+    lastEventSeen(this.secondPage!, event),
+  ]);
 });
