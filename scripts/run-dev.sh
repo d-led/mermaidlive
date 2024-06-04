@@ -2,4 +2,4 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-go run ./cmd/mermaidlive
+go run ./cmd/mermaidlive "$@"
