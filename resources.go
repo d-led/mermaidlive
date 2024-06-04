@@ -13,8 +13,8 @@ const dist = "dist"
 //go:embed dist/*
 var embeddedDist embed.FS
 
-func GetFS(doEmbed bool) http.FileSystem {
-	if doEmbed {
+func GetFS() http.FileSystem {
+	if DoEmbed {
 		return getEmbeddedFS()
 	}
 	return getLocalFS()

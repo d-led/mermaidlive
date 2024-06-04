@@ -12,7 +12,7 @@ import (
 
 func init() {
 	log.Println("using embedded resources")
-	doEmbed = true
+	DoEmbed = true
 }
 
 type noop struct{}
@@ -21,6 +21,6 @@ func (n *noop) Close() error {
 	return nil
 }
 
-func startWatching(_ *pubsub.PubSub[string, Event]) io.Closer {
+func StartWatching(_ *pubsub.PubSub[string, Event]) io.Closer {
 	return &noop{}
 }

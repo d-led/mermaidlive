@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY . .
-RUN go run . -transpile && CGO_ENABLED=0 go build --tags=embed -v -o /run-app .
+RUN go run ./cmd/mermaidlive -transpile && CGO_ENABLED=0 go build --tags=embed -v -o /run-app ./cmd/mermaidlive
 
 FROM alpine:latest as alpine
 # create a user
