@@ -23,7 +23,8 @@ var opts = godog.Options{
 
 const testPort = "8081"
 
-var server *Server
+// sutBaseUrl is set at the beginning of the test suite run
+var sutBaseUrl string
 
 // context keys
 type clientKey struct{}
@@ -32,7 +33,7 @@ type serverKey struct{}
 
 func aSystemInState(ctx context.Context, state string) (context.Context, error) {
 	// client
-	client := NewApiClient("http://localhost:" + testPort)
+	client := NewApiClient(sutBaseUrl)
 	ctx = context.WithValue(ctx, clientKey{}, client)
 
 	if err := client.WaitForState(state); err != nil {
@@ -104,7 +105,7 @@ func twoClientsHaveObserved(ctx context.Context, eventName string) error {
 }
 
 func twoConnectedClients(ctx context.Context) (context.Context, error) {
-	client := NewApiClient("http://localhost:" + testPort)
+	client := NewApiClient(sutBaseUrl)
 	ctx = context.WithValue(ctx, secondClientKey{}, client)
 	return ctx, nil
 }
@@ -126,11 +127,6 @@ func workIsCompleted(ctx context.Context) error {
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
-		// server
-		ctx = context.WithValue(ctx, serverKey{}, server)
-		return ctx, nil
-	})
 	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		if client1, err := getClient(ctx); err == nil {
 			log.Println("closing client 1")
@@ -157,7 +153,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 func TestApi(t *testing.T) {
 	// start the server before the suite
-	server = startServer(testPort)
+	startServer(testPort)
 
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
@@ -185,15 +181,15 @@ func getClientByKey(ctx context.Context, key interface{}) (*ApiClient, error) {
 	return client, nil
 }
 
-func startServer(testPort string) *Server {
+func startServer(testPort string) {
 	log.Println("Starting a new server")
 	eventPublisher := pubsub.New[string, Event](1)
-	server = NewServerWithOptions(
+	server := NewServerWithOptions(
 		testPort,
 		eventPublisher,
 		GetFS(),
 		50*time.Millisecond,
 	)
+	sutBaseUrl = "http://localhost:" + testPort
 	go server.Run(testPort)
-	return server
 }
