@@ -1,3 +1,6 @@
+//go:build api_test
+// +build api_test
+
 package mermaidlive
 
 import (
@@ -14,8 +17,9 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-const readDelay = 10 * time.Millisecond
-const eventWaitingDelay = 100 * time.Millisecond
+var readDelay = 10 * time.Millisecond
+var eventWaitingDelay = 100 * time.Millisecond
+
 const retriesForStateChange = 10
 
 type ApiClient struct {

@@ -152,8 +152,8 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 }
 
 func TestApi(t *testing.T) {
-	// start the server before the suite
 	configureSutBaseUrl()
+	configureTestParameters()
 
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
@@ -190,6 +190,11 @@ func configureSutBaseUrl() {
 	log.Println("SUT_BASE_URL:", sutBaseUrl)
 }
 
+func configureTestParameters() {
+	readDelay = updateDurationIfInEnv("TEST_READ_DELAY", readDelay)
+	eventWaitingDelay = updateDurationIfInEnv("TEST_WAIT_DELAY", eventWaitingDelay)
+}
+
 func startServer() {
 	log.Println("Starting a new server")
 	eventPublisher := pubsub.New[string, Event](1)
@@ -201,4 +206,18 @@ func startServer() {
 	)
 	sutBaseUrl = "http://localhost:" + testPort
 	go server.Run(testPort)
+}
+
+func updateDurationIfInEnv(key string, def time.Duration) time.Duration {
+	v, ok := os.LookupEnv(key)
+	if !ok {
+		return def
+	}
+	d, err := time.ParseDuration(v)
+	if err != nil {
+		log.Println("could not parse duration from " + key + "=" + v)
+		return def
+	}
+	log.Printf("set new duration %s=%v", key, d)
+	return d
 }
