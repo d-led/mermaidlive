@@ -80,6 +80,8 @@ func (s *Server) setupRoutes() {
 	})
 
 	s.server.GET("/events", func(c *gin.Context) {
+		c.Header("Connection", "Keep-Alive")
+		c.Header("Keep-Alive", "timeout=10, max=1000")
 		s.visitor.Joined()
 		defer s.visitor.Left()
 
@@ -89,9 +91,10 @@ func (s *Server) setupRoutes() {
 		myEvents := s.events.Sub(Topic)
 		defer s.events.Unsub(myEvents, Topic)
 
+		streamOneEvent(c, NewSimpleEvent("StartedListening"))
 		streamOneEvent(c, NewEventWithParam("ConnectedToRegion", getRegion()))
 		streamOneEvent(c, NewEventWithParam("Revision", versioninfo.Revision))
-		streamOneEvent(c, NewSimpleEvent("StartedListening"))
+		streamOneEvent(c, NewEventWithParam("LastSeenState", s.fsm.CurrentState()))
 
 		// callback returns false on end of processing
 		c.Stream(func(w io.Writer) bool {

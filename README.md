@@ -23,7 +23,7 @@ go run ./cmd/mermaidlive -transpile
 to build a binary with embedded UI:
 
 ```shell
-go build --tags=embed .
+go build --tags=embed ./cmd/mermaidlive
 ```
 
 ## Architecture

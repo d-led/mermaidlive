@@ -14,23 +14,29 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+const readDelay = 10 * time.Millisecond
+const eventWaitingDelay = 100 * time.Millisecond
+const retriesForStateChange = 10
+
 type ApiClient struct {
 	phony.Inbox
-	baseUrl         string
-	c               *resty.Client
-	currentReader   io.ReadCloser
-	currentBuffer   []byte
-	currentResponse *resty.Response
-	cancel          context.CancelFunc
-	receivedEvents  []ReceivedEvent
+	baseUrl            string
+	callClient         *resty.Client
+	subscriptionClient *resty.Client
+	currentReader      io.ReadCloser
+	currentBuffer      []byte
+	currentResponse    *resty.Response
+	cancel             context.CancelFunc
+	receivedEvents     []ReceivedEvent
 }
 
 func NewApiClient(baseUrl string) *ApiClient {
 	client := &ApiClient{
-		baseUrl:       baseUrl,
-		c:             resty.New().SetBaseURL(baseUrl).SetTimeout(1 * time.Second),
-		currentBuffer: make([]byte, 0),
-		cancel:        func() {},
+		baseUrl:            baseUrl,
+		callClient:         resty.New().SetBaseURL(baseUrl).SetTimeout(1 * time.Second),
+		subscriptionClient: resty.New().SetBaseURL(baseUrl).SetTimeout(1 * time.Second),
+		currentBuffer:      make([]byte, 0),
+		cancel:             func() {},
 	}
 	go client.subscribeToEvents()
 	return client
@@ -40,9 +46,9 @@ func (a *ApiClient) WaitForState(expectedState string) error {
 	var err error
 	var found bool
 	log.Printf("Waiting for state '%s' ...", expectedState)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < retriesForStateChange; i++ {
 		phony.Block(a, func() {
-			res, e := a.c.
+			res, e := a.callClient.
 				R().
 				Get("/machine/state")
 			if e != nil {
@@ -55,7 +61,7 @@ func (a *ApiClient) WaitForState(expectedState string) error {
 				return
 			}
 			log.Printf("Expected state '%v' but found '%v', sleeping to retry...", expectedState, foundState)
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(eventWaitingDelay)
 		})
 	}
 	if !found {
@@ -68,7 +74,7 @@ func (a *ApiClient) PostCommand(command string) error {
 	var err error
 	phony.Block(a, func() {
 		log.Printf("Requesting start ...")
-		_, e := a.c.
+		_, e := a.callClient.
 			R().
 			Post("/commands/" + command)
 		if e != nil {
@@ -81,17 +87,17 @@ func (a *ApiClient) PostCommand(command string) error {
 
 func (a *ApiClient) WaitForEventSeen(eventName string) error {
 	var found bool
-	log.Printf("Waiting for event '%s' ...", eventName)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < retriesForStateChange; i++ {
+		log.Printf("Waiting for event '%s' ...", eventName)
 		phony.Block(a, func() {
 			pos := slices.IndexFunc(a.receivedEvents, func(c ReceivedEvent) bool {
 				return c.Name == eventName
 			})
-			if pos != 1 {
+			if pos >= 0 {
 				found = true
 			}
 		})
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(eventWaitingDelay)
 		if found {
 			return nil
 		}
@@ -114,7 +120,7 @@ func (a *ApiClient) subscribeToEvents() {
 		a.cancel = cancel
 
 		var err error
-		a.currentResponse, err = a.c.
+		a.currentResponse, err = a.subscriptionClient.
 			R().
 			SetContext(ctx).
 			SetDoNotParseResponse(true).
@@ -137,6 +143,7 @@ func (a *ApiClient) readNextEvent() {
 		buf := make([]byte, 1024)
 		n, err := a.currentReader.Read(buf)
 		if err == io.EOF {
+			log.Println("server finished streaming events", err)
 			a.Close()
 			return
 		}
@@ -156,12 +163,13 @@ func (a *ApiClient) readNextEvent() {
 
 func (a *ApiClient) scheduleNextReadSync() {
 	go func() {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(readDelay)
 		a.readNextEvent()
 	}()
 }
 
 func (a *ApiClient) Close() {
+	log.Println("disconnecting the client")
 	a.cancel()
 	a.Act(a, func() {
 		a.tryCloseCurrentReaderSync()
@@ -198,7 +206,7 @@ func (a *ApiClient) tryExtractEventsSync() error {
 			return fmt.Errorf("Error unmarshalling event: %v", err)
 		}
 		a.receivedEvents = append(a.receivedEvents, event)
-		// log.Println("Received event:", event)
+		log.Println("Received event:", event)
 	}
 	a.scheduleNextReadSync()
 	return nil

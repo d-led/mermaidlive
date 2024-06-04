@@ -132,6 +132,11 @@ async function processEvent(event) {
     case "WorkStarted":
       await reRenderGraph("working", `...`);
       break;
+    case "LastSeenState":
+      let state = `${event?.properties?.param}`;
+      console.log(`rendering last seen state: ${state}`);
+      await reRenderGraph(state, "");
+      break;
     case "Tick":
       await reRenderGraph("working", ` ${event?.properties?.param}`);
       break;
@@ -156,7 +161,8 @@ async function processEvent(event) {
       showServerRevision(event?.properties?.param);
       return;
     default:
-      await reRenderGraph("waiting", "");
+      console.log(`unhandled event: ${event.name}`);
+      // await reRenderGraph("", "");
       break;
   }
 
@@ -203,6 +209,7 @@ async function reRenderGraph(selectedState, progress) {
 
 function updateGraphDefinition(selectedState, progress) {
   let res = `stateDiagram-v2
+  [*] --> waiting
   waiting --> working : start
   working --> aborting : abort
   working --> waiting

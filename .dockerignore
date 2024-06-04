@@ -3,3 +3,10 @@ features/
 test/
 .idea/
 docs/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+Dockerfile
+README.md
+traces/

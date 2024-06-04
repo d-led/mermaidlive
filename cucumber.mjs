@@ -1,6 +1,5 @@
 const getWorldParams = () => {
-  const params = {
-  };
+  const params = {};
 
   return params;
 };

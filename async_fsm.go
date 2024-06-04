@@ -16,6 +16,7 @@ type AsyncFSM struct {
 	events       *pubsub.PubSub[string, Event]
 	delay        time.Duration
 	currentCount uint8
+	currentState string
 }
 
 func NewAsyncFSM(events *pubsub.PubSub[string, Event]) *AsyncFSM {
@@ -24,10 +25,11 @@ func NewAsyncFSM(events *pubsub.PubSub[string, Event]) *AsyncFSM {
 
 func NewCustomAsyncFSM(events *pubsub.PubSub[string, Event], delay time.Duration) *AsyncFSM {
 	return &AsyncFSM{
-		ctx:    context.Background(),
-		cancel: noOp(), /*no-op*/
-		events: events,
-		delay:  delay,
+		ctx:          context.Background(),
+		cancel:       noOp(), /*no-op*/
+		events:       events,
+		delay:        delay,
+		currentState: "waiting",
 	}
 }
 
@@ -38,6 +40,7 @@ func (fsm *AsyncFSM) StartWork() {
 			return
 		}
 		fsm.ctx, fsm.cancel = context.WithCancel(context.Background())
+		fsm.currentState = "working"
 		fsm.events.Pub(NewSimpleEvent("WorkStarted"), Topic)
 		fsm.currentCount = 10
 		go fsm.tick()
@@ -52,6 +55,7 @@ func (fsm *AsyncFSM) AbortWork() {
 			return
 		}
 		fsm.cancel()
+		fsm.currentState = "aborting"
 		fsm.events.Pub(NewSimpleEvent("WorkAbortRequested"), Topic)
 	})
 	log.Println("AbortWork finished")
@@ -64,6 +68,7 @@ func (fsm *AsyncFSM) tick() {
 		case <-fsm.ctx.Done():
 			go func() {
 				time.Sleep(fsm.delay)
+				fsm.currentState = "waiting"
 				fsm.events.Pub(NewSimpleEvent("WorkAborted"), Topic)
 			}()
 			fsm.currentCount = 0
@@ -76,6 +81,7 @@ func (fsm *AsyncFSM) tick() {
 		if fsm.currentCount == 0 {
 			go func() {
 				time.Sleep(fsm.delay)
+				fsm.currentState = "waiting"
 				fsm.events.Pub(NewSimpleEvent("WorkDone"), Topic)
 			}()
 			return
@@ -93,10 +99,11 @@ func (fsm *AsyncFSM) IsWaiting() bool {
 }
 
 func (fsm *AsyncFSM) CurrentState() string {
-	if fsm.IsWaiting() {
-		return "waiting"
-	}
-	return "unknown"
+	var res string
+	phony.Block(fsm, func() {
+		res = fsm.currentState
+	})
+	return res
 }
 
 func (fsm *AsyncFSM) getCurrentCount() uint8 {

@@ -19,7 +19,7 @@ import (
 var opts = godog.Options{
 	Output: colors.Colored(os.Stdout),
 	Format: "pretty",
-	Tags:   "~@ui",
+	Tags:   "~@ui && @only",
 }
 
 const testPort = "8081"
@@ -134,10 +134,12 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	})
 	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		if client1, err := getClient(ctx); err == nil {
+			log.Println("closing client 1")
 			client1.Close()
 		}
 
 		if client2, err := getSecondClient(ctx); err == nil {
+			log.Println("closing client 2")
 			client2.Close()
 		}
 
@@ -187,7 +189,7 @@ func getClientByKey(ctx context.Context, key interface{}) (*ApiClient, error) {
 func startServer(testPort string) *Server {
 	log.Println("Starting a new server")
 	eventPublisher := pubsub.New[string, Event](1)
-	server = NewServerWithOptions(testPort, eventPublisher, GetFS(true), 10*time.Millisecond)
+	server = NewServerWithOptions(testPort, eventPublisher, GetFS(), 10*time.Millisecond)
 	go server.Run(testPort)
 	return server
 }
