@@ -153,7 +153,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 func TestApi(t *testing.T) {
 	// start the server before the suite
-	startServer(testPort)
+	configureSutBaseUrl()
 
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
@@ -181,7 +181,16 @@ func getClientByKey(ctx context.Context, key interface{}) (*ApiClient, error) {
 	return client, nil
 }
 
-func startServer(testPort string) {
+func configureSutBaseUrl() {
+	if url, ok := os.LookupEnv("SUT_BASE_URL"); ok {
+		sutBaseUrl = url
+	} else {
+		startServer()
+	}
+	log.Println("SUT_BASE_URL:", sutBaseUrl)
+}
+
+func startServer() {
 	log.Println("Starting a new server")
 	eventPublisher := pubsub.New[string, Event](1)
 	server := NewServerWithOptions(
