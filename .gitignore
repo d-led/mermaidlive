@@ -185,7 +185,6 @@ dist
 
 # End of https://www.toptal.com/developers/gitignore/api/go,visualstudiocode,node
 .idea/
-mermaidlive
 *.exe
 /test-results/
 /playwright-report/
