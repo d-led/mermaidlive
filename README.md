@@ -12,6 +12,8 @@ go run ./cmd/mermaidlive
 
 ![screencast](./docs/img/live_state.gif)
 
+- to change the default countdown delay, provide the option, e.g. `-delay 150ms`
+
 ### Embedded Resources
 
 to only generate UI resources from [ui-src](./ui-src), run:
@@ -62,7 +64,22 @@ go test -v ./...
 - the test starts a temporary server instance and runs the tests against it
 
 ```shell
-go test -tags=api_test -v  ./...
+./scripts/test-api.sh
+```
+
+### Browser-based
+
+- the test uses [Playwright](https://playwright.dev/) via the [cucumber-playwright](https://github.com/Tallyb/cucumber-playwright) template
+- start the server first, e.g.:
+
+```shell
+./scripts/run-dev.sh -delay 150ms
+```
+
+- run the tests:
+
+```shell
+./scripts/test-ui.sh
 ```
 
 ## Approach
