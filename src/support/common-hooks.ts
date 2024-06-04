@@ -81,7 +81,7 @@ Before(async function (this: ICustomWorld, { pickle }: ITestCaseHookParameter) {
       await this.attach(msg.text());
     }
   });
-  this.secondPage = await this.context.newPage();
+  this.secondPage = await this.secondContext.newPage();
   this.feature = pickle;
 });
 

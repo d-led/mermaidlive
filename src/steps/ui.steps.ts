@@ -49,11 +49,11 @@ Then("work is canceled", async function () {
 });
 
 Given("two connected clients", async function () {
-  // Write code here that turns the phrase above into concrete actions
-  return "pending";
+  const secondPage = this.secondPage!;
+  await secondPage.goto(config.BASE_URL);
 });
 
-Then("two clients have observed {string}", async function (_event: string) {
-  // Write code here that turns the phrase above into concrete actions
-  return "pending";
+Then("two clients have observed {string}", async function (event: string) {
+  await lastEventSeen(this.page!, event);
+  await lastEventSeen(this.secondPage!, event);
 });
