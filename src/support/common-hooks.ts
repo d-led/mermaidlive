@@ -59,7 +59,12 @@ Before(async function (this: ICustomWorld, { pickle }: ITestCaseHookParameter) {
   this.testName = pickle.name.replace(/\W/g, "-");
   // customize the [browser context](https://playwright.dev/docs/next/api/class-browser#browsernewcontextoptions)
   this.context = await browser.newContext({
-    acceptDownloads: true,
+    // acceptDownloads: true,
+    recordVideo: process.env.PWVIDEO ? { dir: "screenshots" } : undefined,
+    viewport: { width: 1200, height: 800 },
+  });
+  this.secondContext = await browser.newContext({
+    // acceptDownloads: true,
     recordVideo: process.env.PWVIDEO ? { dir: "screenshots" } : undefined,
     viewport: { width: 1200, height: 800 },
   });
@@ -69,12 +74,14 @@ Before(async function (this: ICustomWorld, { pickle }: ITestCaseHookParameter) {
   });
 
   await this.context.tracing.start({ screenshots: true, snapshots: true });
+
   this.page = await this.context.newPage();
   this.page.on("console", async (msg: ConsoleMessage) => {
     if (msg.type() === "log") {
       await this.attach(msg.text());
     }
   });
+  this.secondPage = await this.context.newPage();
   this.feature = pickle;
 });
 

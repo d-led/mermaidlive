@@ -1,4 +1,5 @@
 import { LaunchOptions } from "@playwright/test";
+
 const browserOptions: LaunchOptions = {
   slowMo: 0,
   args: [

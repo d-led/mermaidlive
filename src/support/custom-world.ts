@@ -15,7 +15,9 @@ export interface ICustomWorld extends World {
   debug: boolean;
   feature?: messages.Pickle;
   context?: BrowserContext;
+  secondContext?: BrowserContext;
   page?: Page;
+  secondPage?: Page;
 
   testName?: string;
   startTime?: Date;
