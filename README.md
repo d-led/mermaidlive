@@ -39,7 +39,7 @@ go build --tags=embed ./cmd/mermaidlive
 - deployment on fly.io
 - sharing Gherkin features between unit, API and Browser tests, and sharing step implementations between scenarios
 - asynchronously connected client tests: two API and Browser clients
-- long poll re-connects
+- long poll re-connects and showing the connection status to the user
 
 ## Architecture
 
