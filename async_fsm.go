@@ -68,10 +68,8 @@ func (fsm *AsyncFSM) tick() {
 		case <-fsm.ctx.Done():
 			go func() {
 				time.Sleep(fsm.delay)
-				fsm.currentState = "waiting"
-				fsm.events.Pub(NewSimpleEvent("WorkAborted"), Topic)
+				fsm.abort()
 			}()
-			fsm.currentCount = 0
 			return
 		default:
 			// not canceled yet
@@ -81,8 +79,7 @@ func (fsm *AsyncFSM) tick() {
 		if fsm.currentCount == 0 {
 			go func() {
 				time.Sleep(fsm.delay)
-				fsm.currentState = "waiting"
-				fsm.events.Pub(NewSimpleEvent("WorkDone"), Topic)
+				fsm.done()
 			}()
 			return
 		}
@@ -90,6 +87,22 @@ func (fsm *AsyncFSM) tick() {
 			time.Sleep(fsm.delay)
 			fsm.tick()
 		}()
+	})
+}
+
+func (fsm *AsyncFSM) abort() {
+	fsm.Act(fsm, func() {
+		fsm.currentState = "waiting"
+		fsm.currentCount = 0
+		fsm.events.Pub(NewSimpleEvent("WorkAborted"), Topic)
+	})
+}
+
+func (fsm *AsyncFSM) done() {
+	fsm.Act(fsm, func() {
+		fsm.currentState = "waiting"
+		fsm.currentCount = 0
+		fsm.events.Pub(NewSimpleEvent("WorkDone"), Topic)
 	})
 }
 
