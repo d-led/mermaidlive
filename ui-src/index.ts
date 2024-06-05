@@ -43,6 +43,7 @@ async function subscribe(
     await subscribe(streamUrl, processingFunc);
   } else {
     hideDisconnectedAlert();
+    flashConnectedAlert();
     // Get and show the message
     const reader = response?.body?.getReader();
     if (!reader) {
@@ -246,4 +247,11 @@ function hideDisconnectedAlert() {
 
 function showDisconnectedAlert() {
   $("#offline-alert").show();
+}
+
+function flashConnectedAlert() {
+  $("#connected-alert").show();
+  $("#connected-alert").fadeTo(500, 50, function () {
+    $("#connected-alert").slideUp(500);
+  });
 }
