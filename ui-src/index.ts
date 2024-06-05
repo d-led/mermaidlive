@@ -14,6 +14,7 @@ $(async function () {
     } catch (err) {
       console.log("ERROR:", err?.message ?? err);
     }
+    showDisconnectedAlert();
     console.log("waiting before reconnecting...");
     await sleep(5);
   }
@@ -31,14 +32,17 @@ async function subscribe(
 
   if (response.status == 502) {
     // reconnect on timeout
+    showDisconnectedAlert();
     await subscribe(streamUrl, processingFunc);
   } else if (response.status != 200) {
     // errored!
+    showDisconnectedAlert();
     console.log("ERROR:", response.statusText);
     // reconnect
     await sleep(3);
     await subscribe(streamUrl, processingFunc);
   } else {
+    hideDisconnectedAlert();
     // Get and show the message
     const reader = response?.body?.getReader();
     if (!reader) {
@@ -234,4 +238,12 @@ function formatEventIntoOneLine(event) {
       .join(", ")}]`;
   }
   return res;
+}
+
+function hideDisconnectedAlert() {
+  $("#offline-alert").hide();
+}
+
+function showDisconnectedAlert() {
+  $("#offline-alert").show();
 }
