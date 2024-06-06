@@ -192,4 +192,4 @@ dist
 /playwright/.cache/
 /traces/
 reports/
-./mermaidlive
+mermaidlive

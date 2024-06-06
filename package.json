@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@types/jquery": "^3.5.30",
+    "node-fetch": "^3.3.2",
     "prettier": "^3.2.5"
   },
   "devDependencies": {
