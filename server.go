@@ -5,11 +5,16 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/carlmjohnson/versioninfo"
 	"github.com/cskr/pubsub/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/ulule/limiter/v3"
+	gm "github.com/ulule/limiter/v3/drivers/middleware/gin"
+	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
 type Server struct {
@@ -35,6 +40,7 @@ func NewServerWithOptions(port string,
 		fs:      fs,
 		ps:      NewPeerSource(events, getPeersDomain()),
 	}
+	server.configureRateLimiting()
 	server.setupRoutes()
 	return server
 }
@@ -44,6 +50,23 @@ func (s *Server) Run(port string) {
 	log.Printf("Visit the UI at %s", s.getUIUrl())
 	s.ps.Start()
 	log.Println(s.server.Run(":" + port))
+}
+
+func (s *Server) configureRateLimiting() {
+	limiterSpec := strings.TrimSpace(os.Getenv("RATE_LIMIT"))
+	if limiterSpec == "" {
+		log.Printf("No rate limiting configured")
+	}
+	rate, err := limiter.NewRateFromFormatted(limiterSpec)
+	if err != nil {
+		log.Printf("bad rate limit '%s': %v", limiterSpec, err)
+		return
+	}
+	store := memory.NewStore()
+	log.Printf("RATE_LIMIT: %s", limiterSpec)
+	middleware := gm.NewMiddleware(limiter.New(store, rate))
+	s.server.ForwardedByClientIP = true
+	s.server.Use(middleware)
 }
 
 func (s *Server) setupRoutes() {

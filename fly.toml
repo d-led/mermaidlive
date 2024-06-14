@@ -18,6 +18,7 @@ primary_region = 'ams'
 
 [env]
  GIN_MODE="release"
+ RATE_LIMIT="100-M" # 100/minute
 
 [[vm]]
   size = 'shared-cpu-1x'

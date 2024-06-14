@@ -11,7 +11,10 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/spf13/pflag v1.0.5
+	github.com/ulule/limiter/v3 v3.11.2
 )
+
+require github.com/pkg/errors v0.9.1 // indirect
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
