@@ -23,7 +23,7 @@ primary_region = 'ams'
 [mounts]
   source = "data"
   destination = "/data"
-  initial_size = "100mb"
+  initial_size = "1GB"
 
 [[vm]]
   size = 'shared-cpu-1x'
