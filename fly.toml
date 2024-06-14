@@ -20,10 +20,10 @@ primary_region = 'ams'
  GIN_MODE="release"
  RATE_LIMIT="100-M" # 100/minute
 
-[mounts]
-  source = "data"
-  destination = "/data"
-  initial_size = "1GB"
+# [mounts]
+#   source = "data"
+#   destination = "/data"
+#   initial_size = "1GB"
 
 [[vm]]
   size = 'shared-cpu-1x'
