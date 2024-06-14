@@ -97,6 +97,7 @@ func (s *Server) setupRoutes() {
 		streamOneEvent(c, NewEventWithParam("ConnectedToRegion", getRegion()))
 		streamOneEvent(c, NewEventWithParam("Revision", versioninfo.Revision))
 		streamOneEvent(c, NewEventWithParam("LastSeenState", s.fsm.CurrentState()))
+		streamOneEvent(c, NewEventWithParam("ReplicasActive", 1 /*initial state*/))
 
 		// callback returns false on end of processing
 		c.Stream(func(w io.Writer) bool {
