@@ -37,7 +37,7 @@ func (ps *PeerSource) pollForever() {
 }
 
 func (ps *PeerSource) getPeers() {
-	addrs, err := net.LookupHost(ps.domainName)
+	addrs, err := net.ResolveIPAddr("ip", ps.domainName)
 	if err != nil {
 		log.Printf("DNS resolution error: %v", err)
 		return

@@ -11,7 +11,7 @@ func getRegion() string {
 
 func getPeersDomain() string {
 	if appName, ok := os.LookupEnv("FLY_APP_NAME"); ok {
-		return appName + ".local"
+		return appName + ".internal"
 	}
 	return ""
 }
