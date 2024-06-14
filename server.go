@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/carlmjohnson/versioninfo"
@@ -20,6 +19,7 @@ type Server struct {
 	fsm     *AsyncFSM
 	visitor *VisitorTracker
 	fs      http.FileSystem
+	ps      *PeerSource
 }
 
 func NewServerWithOptions(port string,
@@ -33,6 +33,7 @@ func NewServerWithOptions(port string,
 		fsm:     NewCustomAsyncFSM(events, delay),
 		visitor: NewVisitorTracker(events),
 		fs:      fs,
+		ps:      NewPeerSource(getPeersDomain()),
 	}
 	server.setupRoutes()
 	return server
@@ -41,6 +42,7 @@ func NewServerWithOptions(port string,
 func (s *Server) Run(port string) {
 	log.Printf("Server running at :%v", port)
 	log.Printf("Visit the UI at %s", s.getUIUrl())
+	s.ps.Start()
 	log.Println(s.server.Run(":" + port))
 }
 
@@ -123,13 +125,6 @@ func (s *Server) getUIUrl() string {
 
 func configureGin() *gin.Engine {
 	return gin.Default()
-}
-
-func getRegion() string {
-	if region, ok := os.LookupEnv("FLY_REGION"); ok {
-		return region
-	}
-	return "local"
 }
 
 func streamOneEvent(c *gin.Context, event any) {
