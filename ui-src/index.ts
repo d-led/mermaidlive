@@ -105,6 +105,13 @@ function showVisitorsActive(count: number) {
   replaceText("#visitors-active", `${count}`);
 }
 
+function showReplicasActive(count: number) {
+  if (count == null) {
+    return;
+  }
+  replaceText("#replicas", `${count}`);
+}
+
 function showServerRevision(text: string) {
   replaceText("#server-revision", text);
 }
@@ -157,9 +164,12 @@ async function processEvent(event) {
       console.log("resources updated, reloading...");
       location.reload();
       break;
-
     case "VisitorsActive":
       showVisitorsActive(event?.properties?.param);
+      // do not show this event in the log
+      return;
+    case "ReplicasActive":
+      showReplicasActive(event?.properties?.param);
       // do not show this event in the log
       return;
     case "Revision":

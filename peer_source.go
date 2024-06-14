@@ -5,17 +5,21 @@ import (
 	"net"
 	"strings"
 	"time"
+
+	"github.com/cskr/pubsub/v2"
 )
 
 const peerUpdateDelay = 5 * time.Second
 
 type PeerSource struct {
 	domainName string
+	events     *pubsub.PubSub[string, Event]
 }
 
-func NewPeerSource(domainName string) *PeerSource {
+func NewPeerSource(events *pubsub.PubSub[string, Event], domainName string) *PeerSource {
 	return &PeerSource{
 		domainName: strings.TrimSpace(domainName),
+		events:     events,
 	}
 }
 
@@ -42,5 +46,5 @@ func (ps *PeerSource) getPeers() {
 		log.Printf("DNS resolution error: %v", err)
 		return
 	}
-	log.Printf("Peers: %v", addrs)
+	ps.events.Pub(NewEventWithParam("ReplicasActive", len(addrs)))
 }

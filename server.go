@@ -33,7 +33,7 @@ func NewServerWithOptions(port string,
 		fsm:     NewCustomAsyncFSM(events, delay),
 		visitor: NewVisitorTracker(events),
 		fs:      fs,
-		ps:      NewPeerSource(getPeersDomain()),
+		ps:      NewPeerSource(events, getPeersDomain()),
 	}
 	server.setupRoutes()
 	return server
