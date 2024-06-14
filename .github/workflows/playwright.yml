@@ -1,6 +1,6 @@
 name: Playwright Tests
 env:
-  SUT_START_SERVER: 'true'
+  SUT_START_SERVER: "true"
 on:
   push:
     branches: [main, master]
