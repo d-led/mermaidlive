@@ -46,5 +46,5 @@ func (ps *PeerSource) getPeers() {
 		log.Printf("DNS resolution error: %v", err)
 		return
 	}
-	ps.events.Pub(NewEventWithParam("ReplicasActive", len(addrs)))
+	ps.events.Pub(NewEventWithParam("ReplicasActive", len(addrs)), Topic)
 }
