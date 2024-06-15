@@ -23,7 +23,7 @@ func NewZmqClient(addr string) *ZmqClient {
 func (c *ZmqClient) Connect() error {
 	err := c.socket.Dial(c.addr)
 	if err != nil {
-		return fmt.Errorf("Could not connect to %s: %v", c.addr, err)
+		return fmt.Errorf("could not connect to %s: %v", c.addr, err)
 	}
 	return nil
 }
