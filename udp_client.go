@@ -11,7 +11,7 @@ func NewUDPClient() *UDPClient {
 }
 
 func (c *UDPClient) Send(addr string, msg []byte) error {
-	udpAddr, err := net.ResolveUDPAddr("udp", addr)
+	udpAddr, err := net.ResolveUDPAddr("udp6", addr)
 	if err != nil {
 		return err
 	}

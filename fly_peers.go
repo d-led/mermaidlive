@@ -81,7 +81,7 @@ func (ps *PeerSource) getPeers() {
 		log.Printf("Peers changed to: %v", peers)
 		for _, peer := range peers {
 			err := ps.udpClient.Send(
-				fmt.Sprintf("%s:%s", peer, getFlyUDPPort()),
+				fmt.Sprintf("[%s]:%s", peer, getFlyUDPPort()),
 				[]byte(fmt.Sprintf("Hello from %s", getFlyPrivateIP())),
 			)
 			if err != nil {
