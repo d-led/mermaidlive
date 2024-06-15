@@ -10,11 +10,16 @@ require (
 	github.com/evanw/esbuild v0.21.5
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-zeromq/zmq4 v0.17.0
 	github.com/spf13/pflag v1.0.5
 	github.com/ulule/limiter/v3 v3.11.2
 )
 
-require github.com/pkg/errors v0.9.1 // indirect
+require (
+	github.com/go-zeromq/goczmq/v4 v4.2.2 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	golang.org/x/sync v0.7.0 // indirect
+)
 
 require (
 	github.com/bytedance/sonic v1.11.8 // indirect

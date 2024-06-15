@@ -18,8 +18,8 @@ type PeerSource struct {
 	domainName string
 	events     *pubsub.PubSub[string, Event]
 	peers      []string
-	udpServer  *UDPServer
-	udpClient  *UDPClient
+	zmqServer  *ZmqServer
+	zmqClients map[string]*ZmqClient
 }
 
 func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *PeerSource {
@@ -27,19 +27,19 @@ func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *PeerSource {
 		domainName: strings.TrimSpace(getFlyPeersDomain()),
 		events:     events,
 		peers:      []string{},
-		udpServer:  NewUDPServer(getFlyUDPBindAddr()),
-		udpClient:  NewUDPClient(),
+		zmqServer:  NewZmqServer(getFlyZmqBindAddr()),
+		zmqClients: make(map[string]*ZmqClient),
 	}
 }
 
-func getFlyUDPBindAddr() string {
-	udpPort := getFlyUDPPort()
-	return fmt.Sprintf("fly-global-services:%s", udpPort)
+func getFlyZmqBindAddr() string {
+	zmqPort := getFlyZmqPort()
+	return fmt.Sprintf("tcp://0.0.0.0:%s", zmqPort)
 }
 
-func getFlyUDPPort() string {
-	if udpPort, ok := os.LookupEnv("UDP_PORT"); ok {
-		return udpPort
+func getFlyZmqPort() string {
+	if port, ok := os.LookupEnv("ZMQ_PORT"); ok {
+		return port
 	}
 	return "5000"
 }
@@ -52,7 +52,7 @@ func (ps *PeerSource) Start() {
 
 	log.Printf("Starting to poll for peers at %s", ps.domainName)
 	go ps.pollForever()
-	go ps.udpServer.Start()
+	go ps.zmqServer.Start()
 }
 
 func (ps *PeerSource) pollForever() {
@@ -78,16 +78,56 @@ func (ps *PeerSource) getPeers() {
 	slices.Sort(peers)
 	if !slices.Equal(peers, ps.peers) || len(ps.peers) == 0 {
 		ps.peers = peers
+		ps.updateZmqConnections()
 		log.Printf("Peers changed to: %v", peers)
 		for _, peer := range peers {
-			err := ps.udpClient.Send(
-				fmt.Sprintf("[%s]:%s", peer, getFlyUDPPort()),
-				[]byte(fmt.Sprintf("Hello from %s", getFlyPrivateIP())),
-			)
+			err := ps.sendZmqMessage(peer, []byte(fmt.Sprintf("Hello from %s", getFlyPrivateIP())))
 			if err != nil {
-				log.Printf("Failed sending a UDP hello to %s: %e", peer, err)
+				log.Printf("Failed sending a ZMQ hello to %s: %e", peer, err)
 			}
 		}
 	}
 	ps.events.Pub(NewEventWithParam("ReplicasActive", len(addrs)), Topic)
+}
+
+func (ps *PeerSource) updateZmqConnections() {
+	zmqPort := getFlyZmqPort()
+	peers := setOf(ps.peers)
+	// if not in new peers, close & remove the connection
+	for clientPeer, conn := range ps.zmqClients {
+		if _, ok := peers[clientPeer]; !ok {
+			conn.Close()
+			delete(peers, clientPeer)
+		}
+	}
+
+	// if not connected, connect
+	for _, peer := range ps.peers {
+		if _, ok := ps.zmqClients[peer]; !ok {
+			peerAddr := fmt.Sprintf("tcp://[%s]:%s", peer, zmqPort)
+			client := NewZmqClient(peerAddr)
+			err := client.Connect()
+			if err != nil {
+				log.Printf("Could not connect to peer: %s: %v", peerAddr, err)
+				continue
+			}
+			ps.zmqClients[peer] = client
+		}
+	}
+}
+
+func (ps *PeerSource) sendZmqMessage(peer string, msg []byte) error {
+	client, ok := ps.zmqClients[peer]
+	if !ok {
+		return fmt.Errorf("could not find a client for %s", peer)
+	}
+	return client.Send(msg)
+}
+
+func setOf(s []string) map[string]bool {
+	var res = make(map[string]bool)
+	for _, e := range s {
+		res[e] = true
+	}
+	return res
 }
