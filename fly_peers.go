@@ -3,12 +3,11 @@ package mermaidlive
 import (
 	"log"
 	"net"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/cskr/pubsub/v2"
-	"github.com/emirpasic/gods/sets"
-	"github.com/emirpasic/gods/sets/hashset"
 )
 
 const peerUpdateDelay = 5 * time.Second
@@ -16,14 +15,14 @@ const peerUpdateDelay = 5 * time.Second
 type PeerSource struct {
 	domainName string
 	events     *pubsub.PubSub[string, Event]
-	peers      sets.Set
+	peers      []string
 }
 
 func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *PeerSource {
 	return &PeerSource{
 		domainName: strings.TrimSpace(getFlyPeersDomain()),
 		events:     events,
-		peers:      hashset.New(),
+		peers:      []string{},
 	}
 }
 
@@ -51,12 +50,14 @@ func (ps *PeerSource) getPeers() {
 		return
 	}
 	myIp := getFlyPrivateIP()
-	peers := hashset.New()
+	peers := []string{}
 	for _, peer := range addrs {
-		peers.Add(peer)
+		if peer != myIp {
+			peers = append(peers, peer)
+		}
 	}
-	peers.Remove(myIp)
-	if ps.peers != peers {
+	slices.Sort(peers)
+	if !slices.Equal(peers, ps.peers) {
 		ps.peers = peers
 		log.Printf("Peers changed to: %v", peers)
 	}
