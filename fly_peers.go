@@ -80,12 +80,12 @@ func (ps *PeerSource) getPeers() {
 		ps.peers = peers
 		ps.updateZmqConnections()
 		log.Printf("Peers changed to: %v", peers)
-		for _, peer := range peers {
-			err := ps.sendZmqMessage(peer, []byte(fmt.Sprintf("Hello from %s", getFlyPrivateIP())))
-			if err != nil {
-				log.Printf("Failed sending a ZMQ hello to %s: %e", peer, err)
-			}
-		}
+		// for _, peer := range peers {
+		// 	err := ps.sendZmqMessage(peer, []byte(fmt.Sprintf("Hello from %s", getFlyPrivateIP())))
+		// 	if err != nil {
+		// 		log.Printf("Failed sending a ZMQ hello to %s: %e", peer, err)
+		// 	}
+		// }
 	}
 	ps.events.Pub(NewEventWithParam("ReplicasActive", len(addrs)), Topic)
 }
@@ -96,6 +96,7 @@ func (ps *PeerSource) updateZmqConnections() {
 	// if not in new peers, close & remove the connection
 	for clientPeer, conn := range ps.zmqClients {
 		if _, ok := peers[clientPeer]; !ok {
+			log.Println("Removing connection to", clientPeer)
 			conn.Close()
 			delete(peers, clientPeer)
 		}
@@ -106,6 +107,7 @@ func (ps *PeerSource) updateZmqConnections() {
 		if _, ok := ps.zmqClients[peer]; !ok {
 			peerAddr := fmt.Sprintf("tcp://[%s]:%s", peer, zmqPort)
 			client := NewZmqClient(peerAddr)
+			log.Println("Connecting to", peerAddr)
 			err := client.Connect()
 			if err != nil {
 				log.Printf("Could not connect to peer: %s: %v", peerAddr, err)
