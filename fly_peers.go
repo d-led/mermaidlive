@@ -52,7 +52,9 @@ func (ps *PeerSource) getPeers() {
 	}
 	myIp := getFlyPrivateIP()
 	peers := hashset.New()
-	peers.Add(addrs)
+	for _, peer := range addrs {
+		peers.Add(peer)
+	}
 	peers.Remove(myIp)
 	if ps.peers != peers {
 		ps.peers = peers
