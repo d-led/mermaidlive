@@ -34,6 +34,6 @@ func (s *ZmqServer) Start() {
 			time.Sleep(5 * time.Second)
 			continue
 		}
-		fmt.Printf("Received %s", msg.String())
+		fmt.Printf("Received %s", string(msg.Bytes()))
 	}
 }
