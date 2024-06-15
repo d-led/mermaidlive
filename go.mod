@@ -14,7 +14,10 @@ require (
 	github.com/ulule/limiter/v3 v3.11.2
 )
 
-require github.com/pkg/errors v0.9.1 // indirect
+require (
+	github.com/emirpasic/gods v1.18.1 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+)
 
 require (
 	github.com/bytedance/sonic v1.11.8 // indirect

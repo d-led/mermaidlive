@@ -15,3 +15,7 @@ func getFlyPeersDomain() string {
 	}
 	return ""
 }
+
+func getFlyPrivateIP() string {
+	return os.Getenv("FLY_PRIVATE_IP")
+}

@@ -47,6 +47,9 @@ func NewServerWithOptions(port string,
 
 func (s *Server) Run(port string) {
 	log.Printf("Server running at :%v", port)
+	if myIp := getFlyPrivateIP(); myIp != "" {
+		log.Printf("Private IP :%v", myIp)
+	}
 	log.Printf("Visit the UI at %s", s.getUIUrl())
 	s.ps.Start()
 	log.Println(s.server.Run(":" + port))
