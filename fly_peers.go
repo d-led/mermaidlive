@@ -76,10 +76,10 @@ func (ps *PeerSource) getPeers() {
 		}
 	}
 	slices.Sort(peers)
-	if !slices.Equal(peers, ps.peers) || len(ps.peers) == 0 {
+	if !slices.Equal(peers, ps.peers) || (len(ps.peers) == 0 && len(peers) != 0) {
+		log.Printf("Peers changed %v -> %v", ps.peers, peers)
 		ps.peers = peers
 		ps.updateZmqConnections()
-		log.Printf("Peers changed to: %v", peers)
 		for _, peer := range peers {
 			err := ps.sendZmqMessage(peer, []byte(fmt.Sprintf("Hello from %s", getFlyPrivateIP())))
 			if err != nil {
