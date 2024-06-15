@@ -29,7 +29,7 @@ func (c *ZmqClient) Connect() error {
 }
 
 func (c *ZmqClient) Send(msg []byte) error {
-	return c.Send(msg)
+	return c.socket.Send(zmq4.NewMsg(msg))
 }
 
 func (c *ZmqClient) Close() {

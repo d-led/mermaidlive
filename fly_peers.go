@@ -80,12 +80,12 @@ func (ps *PeerSource) getPeers() {
 		ps.peers = peers
 		ps.updateZmqConnections()
 		log.Printf("Peers changed to: %v", peers)
-		// for _, peer := range peers {
-		// 	err := ps.sendZmqMessage(peer, []byte(fmt.Sprintf("Hello from %s", getFlyPrivateIP())))
-		// 	if err != nil {
-		// 		log.Printf("Failed sending a ZMQ hello to %s: %e", peer, err)
-		// 	}
-		// }
+		for _, peer := range peers {
+			err := ps.sendZmqMessage(peer, []byte(fmt.Sprintf("Hello from %s", getFlyPrivateIP())))
+			if err != nil {
+				log.Printf("Failed sending a ZMQ hello to %s: %e", peer, err)
+			}
+		}
 	}
 	ps.events.Pub(NewEventWithParam("ReplicasActive", len(addrs)), Topic)
 }
