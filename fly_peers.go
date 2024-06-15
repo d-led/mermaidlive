@@ -16,9 +16,9 @@ type PeerSource struct {
 	events     *pubsub.PubSub[string, Event]
 }
 
-func NewPeerSource(events *pubsub.PubSub[string, Event], domainName string) *PeerSource {
+func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *PeerSource {
 	return &PeerSource{
-		domainName: strings.TrimSpace(domainName),
+		domainName: strings.TrimSpace(getPeersDomain()),
 		events:     events,
 	}
 }

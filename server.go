@@ -38,7 +38,7 @@ func NewServerWithOptions(port string,
 		fsm:     NewCustomAsyncFSM(events, delay),
 		visitor: NewVisitorTracker(events),
 		fs:      fs,
-		ps:      NewPeerSource(events, getPeersDomain()),
+		ps:      NewFlyPeerSource(events),
 	}
 	server.configureRateLimiting()
 	server.setupRoutes()
