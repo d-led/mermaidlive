@@ -57,7 +57,7 @@ func (ps *PeerSource) getPeers() {
 		}
 	}
 	slices.Sort(peers)
-	if !slices.Equal(peers, ps.peers) {
+	if !slices.Equal(peers, ps.peers) || len(ps.peers) == 0 {
 		ps.peers = peers
 		log.Printf("Peers changed to: %v", peers)
 	}
