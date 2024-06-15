@@ -98,7 +98,7 @@ func (ps *PeerSource) updateZmqConnections() {
 		if _, ok := peers[clientPeer]; !ok {
 			log.Println("Removing connection to", clientPeer)
 			conn.Close()
-			delete(peers, clientPeer)
+			delete(ps.zmqClients, clientPeer)
 		}
 	}
 
