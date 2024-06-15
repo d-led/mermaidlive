@@ -117,7 +117,7 @@ func (s *Server) setupRoutes() {
 		defer s.events.Unsub(myEvents, Topic)
 
 		streamOneEvent(c, NewSimpleEvent("StartedListening"))
-		streamOneEvent(c, NewEventWithParam("ConnectedToRegion", getRegion()))
+		streamOneEvent(c, NewEventWithParam("ConnectedToRegion", getFlyRegion()))
 		streamOneEvent(c, NewEventWithParam("Revision", versioninfo.Revision))
 		streamOneEvent(c, NewEventWithParam("LastSeenState", s.fsm.CurrentState()))
 		streamOneEvent(c, NewEventWithParam("ReplicasActive", 1 /*initial state*/))
