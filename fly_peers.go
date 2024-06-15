@@ -1,8 +1,10 @@
 package mermaidlive
 
 import (
+	"fmt"
 	"log"
 	"net"
+	"os"
 	"slices"
 	"strings"
 	"time"
@@ -16,6 +18,8 @@ type PeerSource struct {
 	domainName string
 	events     *pubsub.PubSub[string, Event]
 	peers      []string
+	udpServer  *UDPServer
+	udpClient  *UDPClient
 }
 
 func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *PeerSource {
@@ -23,7 +27,21 @@ func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *PeerSource {
 		domainName: strings.TrimSpace(getFlyPeersDomain()),
 		events:     events,
 		peers:      []string{},
+		udpServer:  NewUDPServer(getFlyUDPBindAddr()),
+		udpClient:  NewUDPClient(),
 	}
+}
+
+func getFlyUDPBindAddr() string {
+	udpPort := getFlyUDPPort()
+	return fmt.Sprintf("fly-global-services:%s", udpPort)
+}
+
+func getFlyUDPPort() string {
+	if udpPort, ok := os.LookupEnv("UDP_PORT"); ok {
+		return udpPort
+	}
+	return "5000"
 }
 
 func (ps *PeerSource) Start() {
@@ -34,6 +52,7 @@ func (ps *PeerSource) Start() {
 
 	log.Printf("Starting to poll for peers at %s", ps.domainName)
 	go ps.pollForever()
+	go ps.udpServer.Start()
 }
 
 func (ps *PeerSource) pollForever() {
@@ -60,6 +79,15 @@ func (ps *PeerSource) getPeers() {
 	if !slices.Equal(peers, ps.peers) || len(ps.peers) == 0 {
 		ps.peers = peers
 		log.Printf("Peers changed to: %v", peers)
+		for _, peer := range peers {
+			err := ps.udpClient.Send(
+				fmt.Sprintf("%s:%s", peer, getFlyUDPPort()),
+				[]byte(fmt.Sprintf("Hello from %s", getFlyPrivateIP())),
+			)
+			if err != nil {
+				log.Printf("Failed sending a UDP hello to %s: %e", peer, err)
+			}
+		}
 	}
 	ps.events.Pub(NewEventWithParam("ReplicasActive", len(addrs)), Topic)
 }
