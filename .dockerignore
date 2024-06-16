@@ -11,3 +11,4 @@ Dockerfile
 README.md
 traces/
 reports/
+fly.toml
