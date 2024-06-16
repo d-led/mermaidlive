@@ -10,12 +10,16 @@ RUN go run ./cmd/mermaidlive -transpile && CGO_ENABLED=0 go build --tags=embed -
 FROM alpine:latest as alpine
 # create a user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# prepare data dir
+RUN mkdir /appdata && chown appuser:appgroup /appdata
 
 FROM scratch
 WORKDIR /
 
+
 # copy the user
 COPY --from=alpine /etc/passwd /etc/passwd
+COPY --chown=appuser:appgroup --from=alpine /appdata /appdata
 USER appuser
 
 COPY --from=builder /run-app /

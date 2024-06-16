@@ -1,0 +1,26 @@
+services:
+  traefik:
+    image: traefik:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:  
+     - "--providers.docker"
+     - "--api.insecure=true"
+     - "--providers.docker"
+     - "--entrypoints.web.address=:8093"
+     - "--log=true"
+    ports:
+      # http
+      - "8093:8093"
+      # ui: http://localhost:8090
+      - "8090:8080" 
+
+  # http://localhost:8093 via traefik
+  mermaidlive:
+    build:
+      context: .
+    environment:
+      - COUNTER_FILENAME=/appdata/my.gcounter
+    labels:
+      - "traefik.http.routers.inventory-api-service.rule=PathPrefix(`/`)"
+      - "traefik.http.services.mermaidlive.loadbalancer.server.port=8080"
