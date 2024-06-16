@@ -11,11 +11,11 @@ services:
      - "--log=true"
     ports:
       # http
-      - "8093:8093"
+      - "8080:8093"
       # ui: http://localhost:8090
       - "8090:8080" 
 
-  # http://localhost:8093 via traefik
+  # http://localhost:8080 via traefik
   mermaidlive:
     build:
       context: .
