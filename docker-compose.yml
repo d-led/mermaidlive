@@ -27,3 +27,4 @@ services:
     labels:
       - "traefik.http.routers.inventory-api-service.rule=PathPrefix(`/`)"
       - "traefik.http.services.mermaidlive.loadbalancer.server.port=8080"
+      - "traefik.http.services.mermaidlive.loadBalancer.sticky.cookie"
