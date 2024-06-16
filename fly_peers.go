@@ -71,6 +71,8 @@ func (ps *PeerSource) Start() {
 }
 
 func (ps *PeerSource) pollForever() {
+	ps.counter.Start()
+	defer ps.counter.Stop()
 	for {
 		ps.getPeers()
 		time.Sleep(peerUpdateDelay)
