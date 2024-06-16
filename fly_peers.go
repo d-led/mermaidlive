@@ -81,6 +81,7 @@ func (ps *PeerSource) listenToInternalEventsForever() {
 	for event := range subscription {
 		if event.Name == "VisitorJoined" {
 			ps.counter.Increment()
+			ps.events.Pub(NewEventWithParam("TotalVisitors", ps.counter.Value()), Topic)
 		}
 	}
 }

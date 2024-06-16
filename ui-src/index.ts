@@ -112,6 +112,13 @@ function showReplicasActive(count: number) {
   replaceText("#replicas", `${count}`);
 }
 
+function showTotalVisitors(count: number) {
+  if (count == null) {
+    return;
+  }
+  replaceText("#total-visitors", `${count}`);
+}
+
 function showServerRevision(text: string) {
   replaceText("#server-revision", text);
 }
@@ -170,6 +177,10 @@ async function processEvent(event) {
       return;
     case "ReplicasActive":
       showReplicasActive(event?.properties?.param);
+      // do not show this event in the log
+      return;
+    case "TotalVisitors":
+      showTotalVisitors(event?.properties?.param);
       // do not show this event in the log
       return;
     case "Revision":

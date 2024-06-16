@@ -18,5 +18,5 @@ func NewCounterListener(events *pubsub.PubSub[string, Event]) *CounterListener {
 
 func (n *CounterListener) OnNewCount(count int64) {
 	log.Println("New visitor count:", count)
-	n.events.Pub(NewEventWithParam("TotalVisitors", count))
+	n.events.Pub(NewEventWithParam("TotalVisitors", count), Topic)
 }
