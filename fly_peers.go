@@ -105,11 +105,19 @@ func (ps *PeerSource) getPeers() {
 	if !slices.Equal(peers, ps.peers) || (len(ps.peers) == 0 && len(peers) != 0) {
 		log.Printf("Peers changed %v -> %v", ps.peers, peers)
 		ps.peers = peers
+		ps.counter.UpdatePeers(zmqPeers(peers))
 	}
 	ps.events.Pub(NewEventWithParam("ReplicasActive", len(addrs)), Topic)
 }
 
-type noOpGcounterState struct{}
+func zmqAddressOf(peer string) string {
+	return fmt.Sprintf("tcp://[%s]:%s", peer, getFlyZmqBindAddr())
+}
 
-func (n *noOpGcounterState) GetState() percounter.GCounterState  { return percounter.GCounterState{} }
-func (n *noOpGcounterState) SetState(s percounter.GCounterState) {}
+func zmqPeers(peers []string) []string {
+	res := []string{}
+	for _, peer := range peers {
+		res = append(res, zmqAddressOf(peer))
+	}
+	return res
+}
