@@ -9,7 +9,7 @@ primary_region = 'ams'
 [build]
 
 [env]
-  COUTER_FILENAME = '/data/local.gcounter'
+  COUNTER_FILENAME = '/data/local.gcounter'
   GIN_MODE = 'release'
   RATE_LIMIT = '100-M'
 

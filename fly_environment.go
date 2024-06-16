@@ -24,7 +24,7 @@ func getFlyPrivateIP() string {
 }
 
 func getCounterFilename() string {
-	if counterFilename, ok := os.LookupEnv("COUTER_FILENAME"); ok {
+	if counterFilename, ok := os.LookupEnv("COUNTER_FILENAME"); ok {
 		return counterFilename
 	}
 	return "local.gcounter"
