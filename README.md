@@ -30,7 +30,7 @@ go build --tags=embed ./cmd/mermaidlive
 
 ## Ideas Sketched in the Spike
 
-- developer experience of live reload [back-end](./watch.go) &rarr; `ResourcesRefreshed` &rarr [front-end](./ui-src/index.ts)
+- developer experience of live reload [back-end](./watch.go) &rarr; `ResourcesRefreshed` &rarr; [front-end](./ui-src/index.ts)
 - UI served from a [binary-embedded filesystem](./resources.go)
 - pub-sub [long-polling](https://ably.com/topic/long-polling) connected clients and live viewers
 - [asynchronously running state machine](./async_fsm.go) observable via published events
@@ -112,3 +112,60 @@ go test -v ./...
 ## Deployment
 
 - currently deployed on [fly.io](https://fly.io/) &rarr; [mermaidlive.fly.dev](https://mermaidlive.fly.dev/)
+- [docker compose](./docker-compose.yml)
+
+## Experiments
+
+### Testing Replication in Docker
+
+to start 3 initial replicas:
+
+```shell
+docker compose up -d
+```
+
+&rarr; visit and reload the UI: [http://localhost:8080/](http://localhost:8080/)
+
+stop 2 replicas:
+
+```shell
+docker stop mermaidlive-mermaidlive-2 mermaidlive-mermaidlive-3
+```
+
+&darr;
+
+log:
+
+```log
+mermaidlive-1 | Peers changed [172.19.0.4 172.19.0.5] -> []
+```
+
+reload the UI a couple of times and re-start the replicas:
+
+```shell
+docker start mermaidlive-mermaidlive-2 mermaidlive-mermaidlive-3
+```
+
+&darr;
+
+log:
+
+```log
+mermaidlive-1 | Peers changed [] -> [172.19.0.4 172.19.0.5]
+mermaidlive-1 | Connecting to tcp://[172.19.0.4]:5000
+mermaidlive-1 | Connecting to tcp://[172.19.0.5]:5000
+mermaidlive-2 | New visitor count: 25
+mermaidlive-3 | New visitor count: 25
+mermaidlive-2 | Peers changed [172.19.0.2] -> [172.19.0.2 172.19.0.5]
+mermaidlive-2 | Connecting to tcp://[172.19.0.5]:5000
+mermaidlive-3 | Peers changed [172.19.0.2] -> [172.19.0.2 172.19.0.4]
+mermaidlive-3 | Connecting to tcp://[172.19.0.4]:5000
+```
+
+observe, how the replicated visitor count is propagated to the replicas.
+
+Scale replicas for further experiments, e.g.:
+
+```shell
+docker compose scale mermaidlive=5
+```
