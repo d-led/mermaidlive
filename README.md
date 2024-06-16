@@ -44,6 +44,7 @@ go build --tags=embed ./cmd/mermaidlive
   - service discovery via [fly.io internal DNS](https://fly.io/docs/networking/private-networking/#fly-io-internal-dns) polling
   - [replication](https://github.com/d-led/percounter/blob/main/zmq_single_gcounter_test.go) via a fully-connected [ZeroMQ](https://github.com/go-zeromq/zmq4) ineternal network mesh
   - a simple persistence of the CRDT counter in a continuously re-written [JSON-structured file](https://github.com/d-led/percounter/blob/main/persistent_gcounter_test.go) located on machine-bound [fly.io volumes](https://fly.io/docs/volumes/overview/#volume-considerations)
+  - not using a separately deployed database for the CRDT 
 
 ## Architecture
 
