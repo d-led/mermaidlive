@@ -42,3 +42,14 @@ func getPublicReplicaId() string {
 	}
 	return "local"
 }
+
+func getPrivateReplicaId() string {
+	if id, ok := os.LookupEnv("FLY_MACHINE_ID"); ok && len(id) > 5 {
+		return id
+	}
+	hostname, err := os.Hostname()
+	if err == nil {
+		return hostname
+	}
+	return "local"
+}

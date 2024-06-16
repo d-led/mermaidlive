@@ -38,11 +38,7 @@ func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *Cluster {
 }
 
 func getCounterIdentity() string {
-	res := getFlyPrivateIP()
-	if res != "" {
-		return res
-	}
-	return "localhost"
+	return getPrivateReplicaId()
 }
 
 func getFlyZmqBindAddr() string {
