@@ -116,7 +116,7 @@ go test -v ./...
 
 ## Experiments
 
-### Testing Replication in Docker
+### Observing Replication in Docker
 
 to start 3 initial replicas:
 
