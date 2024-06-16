@@ -21,6 +21,8 @@ services:
       context: .
     environment:
       - COUNTER_FILENAME=/appdata/my.gcounter
+    deploy:
+      replicas: 3
     labels:
       - "traefik.http.routers.inventory-api-service.rule=PathPrefix(`/`)"
       - "traefik.http.services.mermaidlive.loadbalancer.server.port=8080"

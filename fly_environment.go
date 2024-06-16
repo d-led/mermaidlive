@@ -32,13 +32,17 @@ func getCounterFilename() string {
 
 func GetReplicasEvent(count int) Event {
 	return NewEventWithParam("ReplicasActive",
-		fmt.Sprintf("%d (you are on '%s')", count, getFlyPublicReplicaId()))
+		fmt.Sprintf("%d (you are on '%s')", count, getPublicReplicaId()))
 }
 
-func getFlyPublicReplicaId() string {
+func getPublicReplicaId() string {
 	if id, ok := os.LookupEnv("FLY_MACHINE_ID"); ok && len(id) > 5 {
 		// do not show the full machine ID
 		return id[len(id)-5:]
+	}
+	hostname, err := os.Hostname()
+	if err == nil {
+		return hostname
 	}
 	return "local"
 }
