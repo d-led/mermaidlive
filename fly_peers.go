@@ -109,7 +109,7 @@ func (ps *PeerSource) getPeers() {
 		ps.peers = peers
 		ps.counter.UpdatePeers(zmqPeers(peers))
 	}
-	ps.events.Pub(NewEventWithParam("ReplicasActive", len(addrs)), Topic)
+	ps.events.Pub(GetReplicasEvent(len(addrs)), Topic)
 }
 
 func zmqAddressOf(peer string) string {

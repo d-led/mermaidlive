@@ -1,6 +1,9 @@
 package mermaidlive
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 func getFlyRegion() string {
 	if region, ok := os.LookupEnv("FLY_REGION"); ok {
@@ -25,4 +28,17 @@ func getCounterFilename() string {
 		return counterFilename
 	}
 	return "local.gcounter"
+}
+
+func GetReplicasEvent(count int) Event {
+	return NewEventWithParam("ReplicasActive",
+		fmt.Sprintf("%d (you are on '%s')", count, getFlyPublicReplicaId()))
+}
+
+func getFlyPublicReplicaId() string {
+	if id, ok := os.LookupEnv("FLY_MACHINE_ID"); ok && len(id) > 5 {
+		// do not show the full machine ID
+		return id[len(id)-5:]
+	}
+	return "local"
 }

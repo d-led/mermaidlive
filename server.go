@@ -125,7 +125,7 @@ func (s *Server) setupRoutes() {
 		streamOneEvent(c, NewEventWithParam("ConnectedToRegion", getFlyRegion()))
 		streamOneEvent(c, NewEventWithParam("Revision", versioninfo.Revision))
 		streamOneEvent(c, NewEventWithParam("LastSeenState", s.fsm.CurrentState()))
-		streamOneEvent(c, NewEventWithParam("ReplicasActive", 1 /*initial state*/))
+		streamOneEvent(c, GetReplicasEvent(1))
 
 		// callback returns false on end of processing
 		c.Stream(func(w io.Writer) bool {

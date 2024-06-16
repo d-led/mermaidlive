@@ -105,11 +105,11 @@ function showVisitorsActive(count: number) {
   replaceText("#visitors-active", `${count}`);
 }
 
-function showReplicasActive(count: number) {
-  if (count == null) {
+function showReplicasActive(msg: string) {
+  if (msg == null) {
     return;
   }
-  replaceText("#replicas", `${count}`);
+  replaceText("#replicas", `${msg}`);
 }
 
 function showTotalVisitors(count: number) {
