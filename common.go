@@ -8,6 +8,7 @@ import (
 )
 
 const Topic = "events"
+const InternalTopic = "internal-events"
 
 var DoEmbed = false
 

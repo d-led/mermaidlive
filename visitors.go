@@ -21,6 +21,7 @@ func (v *VisitorTracker) Joined() {
 	v.Act(v, func() {
 		v.visitorsActive++
 		v.events.Pub(NewEventWithParam("VisitorsActive", v.visitorsActive), Topic)
+		v.events.Pub(NewSimpleEvent("VisitorJoined"), InternalTopic)
 	})
 }
 

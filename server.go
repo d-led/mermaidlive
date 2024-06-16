@@ -18,27 +18,29 @@ import (
 )
 
 type Server struct {
-	port    string
-	server  *gin.Engine
-	events  *pubsub.PubSub[string, Event]
-	fsm     *AsyncFSM
-	visitor *VisitorTracker
-	fs      http.FileSystem
-	ps      *PeerSource
+	port           string
+	server         *gin.Engine
+	events         *pubsub.PubSub[string, Event]
+	fsm            *AsyncFSM
+	visitorTracker *VisitorTracker
+	peerSource     *PeerSource
+	uiFilesystem   http.FileSystem
 }
 
 func NewServerWithOptions(port string,
 	events *pubsub.PubSub[string, Event],
 	fs http.FileSystem,
 	delay time.Duration) *Server {
+	peerSource := NewFlyPeerSource(events)
+	visitorTracker := NewVisitorTracker(events)
 	server := &Server{
-		port:    port,
-		server:  configureGin(),
-		events:  events,
-		fsm:     NewCustomAsyncFSM(events, delay),
-		visitor: NewVisitorTracker(events),
-		fs:      fs,
-		ps:      NewFlyPeerSource(events),
+		port:           port,
+		server:         configureGin(),
+		events:         events,
+		fsm:            NewCustomAsyncFSM(events, delay),
+		visitorTracker: visitorTracker,
+		peerSource:     peerSource,
+		uiFilesystem:   fs,
 	}
 	server.configureRateLimiting()
 	server.setupRoutes()
@@ -51,7 +53,7 @@ func (s *Server) Run(port string) {
 		log.Printf("Private IP: %v", myIp)
 	}
 	log.Printf("Visit the UI at %s", s.getUIUrl())
-	s.ps.Start()
+	s.peerSource.Start()
 	log.Println(s.server.Run(":" + port))
 }
 
@@ -76,7 +78,7 @@ func (s *Server) setupRoutes() {
 	s.server.GET("/", func(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/ui")
 	})
-	s.server.StaticFS("/ui/", s.fs)
+	s.server.StaticFS("/ui/", s.uiFilesystem)
 
 	s.server.GET("/machine/state", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, s.fsm.CurrentState())
@@ -110,8 +112,8 @@ func (s *Server) setupRoutes() {
 	s.server.GET("/events", func(c *gin.Context) {
 		c.Header("Connection", "Keep-Alive")
 		c.Header("Keep-Alive", "timeout=10, max=1000")
-		s.visitor.Joined()
-		defer s.visitor.Left()
+		s.visitorTracker.Joined()
+		defer s.visitorTracker.Left()
 
 		ctx := c.Request.Context()
 		closeNotify := c.Writer.CloseNotify()

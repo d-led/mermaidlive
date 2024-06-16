@@ -1,12 +1,13 @@
 module github.com/d-led/mermaidlive
 
-go 1.22
+go 1.22.4
 
 require (
 	github.com/Arceliar/phony v0.0.0-20220903101357-530938a4b13d
 	github.com/carlmjohnson/versioninfo v0.22.5
 	github.com/cskr/pubsub/v2 v2.0.2
 	github.com/cucumber/godog v0.14.1
+	github.com/d-led/percounter v0.0.4
 	github.com/evanw/esbuild v0.21.5
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.10.0

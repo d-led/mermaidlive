@@ -193,3 +193,4 @@ dist
 /traces/
 reports/
 mermaidlive
+*.gcounter
