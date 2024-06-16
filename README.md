@@ -40,6 +40,10 @@ go build --tags=embed ./cmd/mermaidlive
 - sharing Gherkin features between unit, API and Browser tests, and sharing step implementations between scenarios
 - asynchronously connected client tests: two API and Browser clients
 - long poll re-connects and showing the connection status to the user
+- a persistent distributed [G-Counter (grow-only counter)](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type#G-Counter_(Grow-only_Counter)) CRDT for started connections that is eventually-consistent, once service replicas see each other
+  - service discovery via [fly.io internal DNS](https://fly.io/docs/networking/private-networking/#fly-io-internal-dns) polling
+  - [replication](https://github.com/d-led/percounter/blob/main/zmq_single_gcounter_test.go) via a fully-connected [ZeroMQ](https://github.com/go-zeromq/zmq4) ineternal network mesh
+  - a simple persistence of the CRDT counter in a continuously re-written [JSON-structured file](https://github.com/d-led/percounter/blob/main/persistent_gcounter_test.go) located on machine-bound [fly.io volumes](https://fly.io/docs/volumes/overview/#volume-considerations)
 
 ## Architecture
 
