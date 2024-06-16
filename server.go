@@ -23,7 +23,7 @@ type Server struct {
 	events         *pubsub.PubSub[string, Event]
 	fsm            *AsyncFSM
 	visitorTracker *VisitorTracker
-	peerSource     *PeerSource
+	peerSource     *Cluster
 	uiFilesystem   http.FileSystem
 }
 

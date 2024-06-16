@@ -10,6 +10,10 @@ import (
 const Topic = "events"
 const InternalTopic = "internal-events"
 
+type PeerLocator interface {
+	GetPeers() ([]string, int, error)
+}
+
 var DoEmbed = false
 
 func crashOnError(err error) {

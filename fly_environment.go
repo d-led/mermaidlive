@@ -19,10 +19,6 @@ func getFlyPeersDomain() string {
 	return ""
 }
 
-func getFlyPrivateIP() string {
-	return os.Getenv("FLY_PRIVATE_IP")
-}
-
 func getCounterFilename() string {
 	if counterFilename, ok := os.LookupEnv("COUNTER_FILENAME"); ok {
 		return counterFilename

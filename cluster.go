@@ -3,7 +3,6 @@ package mermaidlive
 import (
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"slices"
 	"strings"
@@ -15,20 +14,20 @@ import (
 
 const peerUpdateDelay = 5 * time.Second
 
-type PeerSource struct {
-	domainName string
-	events     *pubsub.PubSub[string, Event]
-	peers      []string
-	counter    *percounter.ZmqSingleGcounter
+type Cluster struct {
+	events      *pubsub.PubSub[string, Event]
+	peers       []string
+	counter     *percounter.ZmqSingleGcounter
+	peerLocator PeerLocator
 }
 
-func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *PeerSource {
+func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *Cluster {
 	counterFilename := getCounterFilename()
 	log.Println("Visitor counter filename:", counterFilename)
-	return &PeerSource{
-		domainName: strings.TrimSpace(getFlyPeersDomain()),
-		events:     events,
-		peers:      []string{},
+	return &Cluster{
+		peerLocator: ChoosePeerLocator(),
+		events:      events,
+		peers:       []string{},
 		counter: percounter.NewObservableZmqSingleGcounter(
 			getCounterIdentity(),
 			counterFilename,
@@ -58,19 +57,20 @@ func getFlyZmqPort() string {
 	return "5000"
 }
 
-func (ps *PeerSource) Start() {
+func (ps *Cluster) Start() {
 	go ps.listenToInternalEventsForever()
 
-	if ps.domainName == "" {
+	if ps.peerLocator == nil {
 		log.Println("not polling for peers")
 		return
 	}
 
 	log.Printf("Starting to poll for peers")
+
 	go ps.pollForever()
 }
 
-func (ps *PeerSource) pollForever() {
+func (ps *Cluster) pollForever() {
 	ps.counter.Start()
 	defer ps.counter.Stop()
 	for {
@@ -79,7 +79,7 @@ func (ps *PeerSource) pollForever() {
 	}
 }
 
-func (ps *PeerSource) listenToInternalEventsForever() {
+func (ps *Cluster) listenToInternalEventsForever() {
 	subscription := ps.events.Sub(InternalTopic)
 	defer ps.events.Unsub(subscription, InternalTopic)
 	for event := range subscription {
@@ -90,26 +90,26 @@ func (ps *PeerSource) listenToInternalEventsForever() {
 	}
 }
 
-func (ps *PeerSource) getPeers() {
-	addrs, err := net.LookupHost(ps.domainName)
-	if err != nil {
-		log.Printf("DNS resolution error: %v", err)
+func (ps *Cluster) getPeers() {
+	if ps.peerLocator == nil {
 		return
 	}
-	myIp := getFlyPrivateIP()
-	peers := []string{}
-	for _, peer := range addrs {
-		if peer != myIp {
-			peers = append(peers, peer)
-		}
+
+	peers, replicaCount, err := ps.peerLocator.GetPeers()
+	if err != nil {
+		log.Printf("Error getting peers: %v", err)
+		// something might be off, better disconnect from everyone at this point
+		peers = []string{}
 	}
+
 	slices.Sort(peers)
+
 	if !slices.Equal(peers, ps.peers) || (len(ps.peers) == 0 && len(peers) != 0) {
 		log.Printf("Peers changed %v -> %v", ps.peers, peers)
 		ps.peers = peers
 		ps.counter.UpdatePeers(zmqPeers(peers))
 	}
-	ps.events.Pub(GetReplicasEvent(len(addrs)), Topic)
+	ps.events.Pub(GetReplicasEvent(replicaCount), Topic)
 }
 
 func zmqAddressOf(peer string) string {
@@ -122,4 +122,20 @@ func zmqPeers(peers []string) []string {
 		res = append(res, zmqAddressOf(peer))
 	}
 	return res
+}
+
+func ChoosePeerLocator() PeerLocator {
+	flyDiscoveryDomainName := strings.TrimSpace(getFlyPeersDomain())
+	if flyDiscoveryDomainName != "" {
+		return NewFlyPeerLocator(flyDiscoveryDomainName)
+	}
+	traefikServicesUrl := getTraefikServicesUrl()
+	if traefikServicesUrl != "" {
+		return NewTraefikPeerLocator(traefikServicesUrl)
+	}
+	return nil
+}
+
+func getTraefikServicesUrl() string {
+	return os.Getenv("TRAEFIK_SERVICES_URL")
 }
