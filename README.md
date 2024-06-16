@@ -169,3 +169,22 @@ Scale replicas for further experiments, e.g.:
 ```shell
 docker compose scale mermaidlive=5
 ```
+
+copying the replica file to the local filesystem reveals the structure of the G-Counter:
+
+```shell
+docker compose cp mermaidlive:/appdata/my.gcounter .
+```
+
+&darr;
+
+```json
+{
+    "peers": {
+        "3d226c43af66": 7,
+        "c2206af9aba2": 9
+    }
+}
+```
+
+which results in the observable counter value of `16`.
