@@ -111,7 +111,7 @@ func (ps *PeerSource) getPeers() {
 }
 
 func zmqAddressOf(peer string) string {
-	return fmt.Sprintf("tcp://[%s]:%s", peer, getFlyZmqBindAddr())
+	return fmt.Sprintf("tcp://[%s]:%s", peer, getFlyZmqPort())
 }
 
 func zmqPeers(peers []string) []string {
