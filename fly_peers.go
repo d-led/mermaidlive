@@ -19,18 +19,20 @@ type PeerSource struct {
 	domainName string
 	events     *pubsub.PubSub[string, Event]
 	peers      []string
-	counter    *percounter.PersistentGCounter
+	counter    *percounter.ZmqSingleGcounter
 }
 
 func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *PeerSource {
+	counterFilename := getCounterFilename()
+	log.Println("Visitor counter filename:", counterFilename)
 	return &PeerSource{
 		domainName: strings.TrimSpace(getFlyPeersDomain()),
 		events:     events,
 		peers:      []string{},
-		counter: percounter.NewPersistentGCounterWithSinkAndObserver(
+		counter: percounter.NewObservableZmqSingleGcounter(
 			getCounterIdentity(),
-			getCounterFilename(),
-			&noOpGcounterState{},
+			counterFilename,
+			getFlyZmqBindAddr(),
 			NewCounterListener(events),
 		),
 	}
@@ -64,7 +66,7 @@ func (ps *PeerSource) Start() {
 		return
 	}
 
-	log.Printf("Starting to poll for peers at %s", ps.domainName)
+	log.Printf("Starting to poll for peers")
 	go ps.pollForever()
 }
 
