@@ -87,12 +87,15 @@ func migrate() {
 	}
 	err = copyFile(oldFilename, newFilename)
 	if err != nil {
-		panic(err)
+		log.Println("original counter file already copied")
+		return
 	}
+	log.Println("copied counter file")
 	err = os.Remove(oldFilename)
 	if err != nil {
 		panic(err)
 	}
+	log.Println("migrations complete")
 }
 
 func copyFile(src, dst string) error {
