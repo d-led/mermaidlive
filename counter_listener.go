@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/cskr/pubsub/v2"
+	"github.com/d-led/percounter"
 )
 
 type CounterListener struct {
@@ -16,7 +17,7 @@ func NewCounterListener(events *pubsub.PubSub[string, Event]) *CounterListener {
 	}
 }
 
-func (n *CounterListener) OnNewCount(count int64) {
-	log.Println("New visitor count:", count)
-	n.events.Pub(NewEventWithParam("TotalVisitors", count), Topic)
+func (n *CounterListener) OnNewCount(ev percounter.CountEvent) {
+	log.Println("New visitor count:", ev.Count)
+	n.events.Pub(NewEventWithParam("TotalVisitors", ev.Count), Topic)
 }

@@ -21,8 +21,8 @@ github.com/cucumber/godog v0.14.1/go.mod h1:FX3rzIDybWABU4kuIXLZ/qtqEe1Ac5RdXmqv
 github.com/cucumber/messages/go/v21 v21.0.1 h1:wzA0LxwjlWQYZd32VTlAVDTkW6inOFmSM+RuOwHZiMI=
 github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUtmYQAQPLk7w5vWsk5s=
 github.com/cucumber/messages/go/v22 v22.0.0/go.mod h1:aZipXTKc0JnjCsXrJnuZpWhtay93k7Rn3Dee7iyPJjs=
-github.com/d-led/percounter v0.0.4 h1:N+gvlP4NtgN91UdALooy0bhn5/7NP4m2xY/xZ9yEq2w=
-github.com/d-led/percounter v0.0.4/go.mod h1:EQYgTQspKWyGVxkMOwSX6nxIrR+ZHdIgk+nHGnjj92U=
+github.com/d-led/percounter v0.0.6 h1:eLV2uy9NxLV+VdtFtgm/i9bq7Ln8ZFzU5Rl92mw8WVY=
+github.com/d-led/percounter v0.0.6/go.mod h1:EQYgTQspKWyGVxkMOwSX6nxIrR+ZHdIgk+nHGnjj92U=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
