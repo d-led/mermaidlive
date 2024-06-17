@@ -9,8 +9,8 @@ primary_region = 'ams'
 [build]
 
 [env]
-  OLD_COUNTER_FILENAME = '/data/local.gcounter'
-  COUNTER_FILENAME = '/data/counters/local.gcounter'
+  OLD_COUNTER_FILENAME = '/data/counters/local.gcounter'
+  COUNTER_FILENAME = '/data/counters/newconnections.gcounter'
   COUNTER_DIRECTORY = '/data/counters'
   GIN_MODE = 'release'
   RATE_LIMIT = '100-M'
