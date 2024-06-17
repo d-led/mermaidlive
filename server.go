@@ -61,6 +61,7 @@ func (s *Server) configureRateLimiting() {
 	limiterSpec := strings.TrimSpace(os.Getenv("RATE_LIMIT"))
 	if limiterSpec == "" {
 		log.Printf("No rate limiting configured")
+		return
 	}
 	rate, err := limiter.NewRateFromFormatted(limiterSpec)
 	if err != nil {
