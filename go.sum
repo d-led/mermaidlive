@@ -23,6 +23,10 @@ github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUt
 github.com/cucumber/messages/go/v22 v22.0.0/go.mod h1:aZipXTKc0JnjCsXrJnuZpWhtay93k7Rn3Dee7iyPJjs=
 github.com/d-led/percounter v0.0.7 h1:hHYtJEEj7Q5JrUoMwUPifmTaPWKuKWIaLurj6zGiN6Y=
 github.com/d-led/percounter v0.0.7/go.mod h1:EQYgTQspKWyGVxkMOwSX6nxIrR+ZHdIgk+nHGnjj92U=
+github.com/d-led/percounter v0.0.8 h1:CT9Op5YAq7XbLgGXVaHoHyWDaskar8lcua+nc2rHeLQ=
+github.com/d-led/percounter v0.0.8/go.mod h1:MIZIBdqdYwkdLP6xtTT7itwAfQq5K6zzWkxiX9sP+oo=
+github.com/d-led/zmqcluster v0.0.2 h1:SctxXlY+8hnUQFFt98rduY/rBKP9yiEsklaufIZkLW0=
+github.com/d-led/zmqcluster v0.0.2/go.mod h1:wndqc47ynaQnsNCzndLcNEUR/RwWCN4wq5lrhBFM3/o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

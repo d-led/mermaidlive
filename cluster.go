@@ -10,6 +10,7 @@ import (
 
 	"github.com/cskr/pubsub/v2"
 	"github.com/d-led/percounter"
+	"github.com/d-led/zmqcluster"
 )
 
 const peerUpdateDelay = 5 * time.Second
@@ -17,21 +18,24 @@ const peerUpdateDelay = 5 * time.Second
 type Cluster struct {
 	events      *pubsub.PubSub[string, Event]
 	peers       []string
-	counter     *percounter.ZmqSingleGcounter
+	cluster     zmqcluster.Cluster
+	counter     *percounter.ZmqMultiGcounter
 	peerLocator PeerLocator
 }
 
 func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *Cluster {
-	counterFilename := getCounterFilename()
-	log.Println("Visitor counter filename:", counterFilename)
+	counterDirectory := getCounterDirectory()
+	log.Println("Counter directory:", counterDirectory)
+	cluster := zmqcluster.NewZmqCluster(getCounterIdentity(), getFlyZmqBindAddr())
 	return &Cluster{
 		peerLocator: ChoosePeerLocator(),
 		events:      events,
 		peers:       []string{},
-		counter: percounter.NewObservableZmqSingleGcounter(
+		cluster:     cluster,
+		counter: percounter.NewObservableZmqMultiGcounterInCluster(
 			getCounterIdentity(),
-			counterFilename,
-			getFlyZmqBindAddr(),
+			counterDirectory,
+			cluster,
 			NewCounterListener(events),
 		),
 	}
@@ -80,8 +84,8 @@ func (ps *Cluster) listenToInternalEventsForever() {
 	defer ps.events.Unsub(subscription, InternalTopic)
 	for event := range subscription {
 		if event.Name == "VisitorJoined" {
-			ps.counter.Increment()
-			ps.events.Pub(NewEventWithParam("TotalVisitors", ps.counter.Value()), Topic)
+			ps.counter.Increment(NewConnectionsCounter)
+			ps.events.Pub(NewEventWithParam("TotalVisitors", ps.counter.Value(NewConnectionsCounter)), Topic)
 		}
 	}
 }

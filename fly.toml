@@ -9,9 +9,9 @@ primary_region = 'ams'
 [build]
 
 [env]
-  COUNTER_FILENAME = '/data/counters/newconnections.gcounter'
+  # COUNTER_FILENAME = '/data/counters/newconnections.gcounter'
   # next iteration with multiple counters
-  # COUNTER_DIRECTORY = '/data/counters'
+  COUNTER_DIRECTORY = '/data/counters'
   GIN_MODE = 'release'
   RATE_LIMIT = '100-M'
 

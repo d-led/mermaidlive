@@ -12,3 +12,4 @@ README.md
 traces/
 reports/
 fly.toml
+docker-compose.yml

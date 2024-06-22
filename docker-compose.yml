@@ -21,7 +21,7 @@ services:
       context: .
     environment:
       - TRAEFIK_SERVICES_URL=http://traefik:8080/api/http/services/mermaidlive%40docker
-      - COUNTER_FILENAME=/appdata/my.gcounter
+      - COUNTER_DIRECTORY=/appdata
     deploy:
       replicas: 3
     labels:

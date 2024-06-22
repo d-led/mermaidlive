@@ -19,11 +19,11 @@ func getFlyPeersDomain() string {
 	return ""
 }
 
-func getCounterFilename() string {
-	if counterFilename, ok := os.LookupEnv("COUNTER_FILENAME"); ok {
-		return counterFilename
+func getCounterDirectory() string {
+	if counterDirectory, ok := os.LookupEnv("COUNTER_DIRECTORY"); ok {
+		return counterDirectory
 	}
-	return "local.gcounter"
+	return "."
 }
 
 func GetReplicasEvent(count int) Event {

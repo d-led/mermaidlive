@@ -9,6 +9,7 @@ import (
 
 const Topic = "events"
 const InternalTopic = "internal-events"
+const NewConnectionsCounter = "newconnections"
 
 type PeerLocator interface {
 	GetPeers() ([]string, int, error)
