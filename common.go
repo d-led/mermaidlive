@@ -10,6 +10,13 @@ import (
 const Topic = "events"
 const InternalTopic = "internal-events"
 const NewConnectionsCounter = "newconnections"
+const StartedConnectionsCounter = "started-connections"
+const ClosedConnectionsCounter = "closed-connections"
+const VisitorJoinedEvent = "VisitorJoined"
+const VisitorLeftEvent = "VisitorLeft"
+const VisitorsActiveEvent = "VisitorsActive"
+const TotalVisitorsEvent = "TotalVisitors"
+const TotalClusterVisitorsActiveEvent = "TotalClusterVisitorsActive"
 
 type PeerLocator interface {
 	GetPeers() ([]string, int, error)

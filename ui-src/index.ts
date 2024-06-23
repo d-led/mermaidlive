@@ -105,6 +105,13 @@ function showVisitorsActive(count: number) {
   replaceText("#visitors-active", `${count}`);
 }
 
+function showVisitorsActiveInCluster(count: number) {
+  if (count == null) {
+    return;
+  }
+  replaceText("#visitors-active-cluster", `${count}`);
+}
+
 function showReplicasActive(msg: string) {
   if (msg == null) {
     return;
@@ -175,6 +182,10 @@ async function processEvent(event) {
       showVisitorsActive(event?.properties?.param);
       // do not show this event in the log
       return;
+    case "TotalClusterVisitorsActive":
+        showVisitorsActiveInCluster(event?.properties?.param);
+        // do not show this event in the log
+        return;
     case "ReplicasActive":
       showReplicasActive(event?.properties?.param);
       // do not show this event in the log

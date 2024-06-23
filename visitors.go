@@ -20,14 +20,15 @@ func NewVisitorTracker(events *pubsub.PubSub[string, Event]) *VisitorTracker {
 func (v *VisitorTracker) Joined() {
 	v.Act(v, func() {
 		v.visitorsActive++
-		v.events.Pub(NewEventWithParam("VisitorsActive", v.visitorsActive), Topic)
-		v.events.Pub(NewSimpleEvent("VisitorJoined"), InternalTopic)
+		v.events.Pub(NewEventWithParam(VisitorsActiveEvent, v.visitorsActive), Topic)
+		v.events.Pub(NewSimpleEvent(VisitorJoinedEvent), InternalTopic)
 	})
 }
 
 func (v *VisitorTracker) Left() {
 	v.Act(v, func() {
 		v.visitorsActive--
-		v.events.Pub(NewEventWithParam("VisitorsActive", v.visitorsActive), Topic)
+		v.events.Pub(NewEventWithParam(VisitorsActiveEvent, v.visitorsActive), Topic)
+		v.events.Pub(NewSimpleEvent(VisitorLeftEvent), InternalTopic)
 	})
 }

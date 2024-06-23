@@ -19,7 +19,7 @@ func getFlyPeersDomain() string {
 	return ""
 }
 
-func getCounterDirectory() string {
+func GetCounterDirectory() string {
 	if counterDirectory, ok := os.LookupEnv("COUNTER_DIRECTORY"); ok {
 		return counterDirectory
 	}

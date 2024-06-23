@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"path"
 	"time"
 
 	"github.com/carlmjohnson/versioninfo"
@@ -21,6 +22,8 @@ const defaultCountdownDelay = 800 * time.Millisecond
 
 func main() {
 	flag.Parse()
+
+	runMigrationsSync()
 
 	if *transpileOnly {
 		mermaidlive.Refresh()
@@ -69,4 +72,22 @@ func getCountdownDelay() time.Duration {
 	}
 	log.Printf("countdown delay: %v", d)
 	return d
+}
+
+func runMigrationsSync() {
+	zeroActiveConnectionCount()
+}
+
+func zeroActiveConnectionCount() {
+	deleteFile(path.Join(mermaidlive.GetCounterDirectory(),
+		mermaidlive.StartedConnectionsCounter+".gcounter"))
+	deleteFile(path.Join(mermaidlive.GetCounterDirectory(),
+		mermaidlive.ClosedConnectionsCounter+".gcounter"))
+}
+
+func deleteFile(fn string) {
+	log.Println("removing ", fn, " ... ")
+	if err := os.Remove(fn); err != nil {
+		log.Println(err)
+	}
 }

@@ -23,25 +23,32 @@ type Cluster struct {
 	peerLocator PeerLocator
 }
 
-func NewFlyPeerSource(events *pubsub.PubSub[string, Event]) *Cluster {
-	counterDirectory := getCounterDirectory()
+func NewCluster(events *pubsub.PubSub[string, Event]) *Cluster {
+	counterDirectory := GetCounterDirectory()
 	log.Println("Counter directory:", counterDirectory)
-	cluster := zmqcluster.NewZmqCluster(getCounterIdentity(), getFlyZmqBindAddr())
+	cluster := zmqcluster.NewZmqCluster(GetCounterIdentity(), getFlyZmqBindAddr())
+
+	counterListener := NewCounterListener(events)
+	counter := percounter.NewObservableZmqMultiGcounterInCluster(
+		GetCounterIdentity(),
+		counterDirectory,
+		cluster,
+		counterListener,
+	)
+	if err := counter.LoadAllSync(); err != nil {
+		log.Printf("failed to load all counters, continuing nonetheless: %v", err)
+	}
+
 	return &Cluster{
 		peerLocator: ChoosePeerLocator(),
 		events:      events,
 		peers:       []string{},
 		cluster:     cluster,
-		counter: percounter.NewObservableZmqMultiGcounterInCluster(
-			getCounterIdentity(),
-			counterDirectory,
-			cluster,
-			NewCounterListener(events),
-		),
+		counter:     counter,
 	}
 }
 
-func getCounterIdentity() string {
+func GetCounterIdentity() string {
 	return getPrivateReplicaId()
 }
 
@@ -71,7 +78,7 @@ func (ps *Cluster) Start() {
 }
 
 func (ps *Cluster) pollForever() {
-	ps.counter.Start()
+	ps.cluster.Start()
 	defer ps.counter.Stop()
 	for {
 		ps.getPeers()
@@ -83,9 +90,14 @@ func (ps *Cluster) listenToInternalEventsForever() {
 	subscription := ps.events.Sub(InternalTopic)
 	defer ps.events.Unsub(subscription, InternalTopic)
 	for event := range subscription {
-		if event.Name == "VisitorJoined" {
+		switch event.Name {
+		case VisitorJoinedEvent:
 			ps.counter.Increment(NewConnectionsCounter)
-			ps.events.Pub(NewEventWithParam("TotalVisitors", ps.counter.Value(NewConnectionsCounter)), Topic)
+			ps.counter.Increment(StartedConnectionsCounter)
+			ps.events.Pub(NewEventWithParam(TotalVisitorsEvent, ps.counter.Value(NewConnectionsCounter)), Topic)
+			sendInitialClusterConnectionCount(ps.events, ps.counter)
+		case VisitorLeftEvent:
+			ps.counter.Increment(ClosedConnectionsCounter)
 		}
 	}
 }
@@ -138,4 +150,14 @@ func ChoosePeerLocator() PeerLocator {
 
 func getTraefikServicesUrl() string {
 	return os.Getenv("TRAEFIK_SERVICES_URL")
+}
+
+func sendInitialClusterConnectionCount(
+	events *pubsub.PubSub[string, Event],
+	counter *percounter.ZmqMultiGcounter,
+) {
+	started := counter.Value(StartedConnectionsCounter)
+	closed := counter.Value(ClosedConnectionsCounter)
+
+	events.Pub(NewEventWithParam(TotalClusterVisitorsActiveEvent, started-closed))
 }

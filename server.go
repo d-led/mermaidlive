@@ -31,7 +31,7 @@ func NewServerWithOptions(port string,
 	events *pubsub.PubSub[string, Event],
 	fs http.FileSystem,
 	delay time.Duration) *Server {
-	peerSource := NewFlyPeerSource(events)
+	peerSource := NewCluster(events)
 	visitorTracker := NewVisitorTracker(events)
 	server := &Server{
 		port:           port,
