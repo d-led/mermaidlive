@@ -35,6 +35,7 @@ func NewCluster(events *pubsub.PubSub[string, Event]) *Cluster {
 		cluster,
 		counterListener,
 	)
+	counter.ShouldPersistOnSignal()
 	if err := counter.LoadAllSync(); err != nil {
 		log.Printf("failed to load all counters, continuing nonetheless: %v", err)
 	}
