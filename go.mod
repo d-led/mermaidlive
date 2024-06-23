@@ -7,7 +7,7 @@ require (
 	github.com/carlmjohnson/versioninfo v0.22.5
 	github.com/cskr/pubsub/v2 v2.0.2
 	github.com/cucumber/godog v0.14.1
-	github.com/d-led/percounter v0.0.11
+	github.com/d-led/percounter v0.0.12
 	github.com/d-led/zmqcluster v0.0.3
 	github.com/evanw/esbuild v0.21.5
 	github.com/fsnotify/fsnotify v1.7.0
@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	github.com/bytedance/sonic v1.11.8 // indirect
+	github.com/bytedance/sonic v1.11.9 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
