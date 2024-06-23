@@ -10,6 +10,7 @@ import (
 	"github.com/carlmjohnson/versioninfo"
 	"github.com/cskr/pubsub/v2"
 	"github.com/d-led/mermaidlive"
+	"github.com/d-led/percounter"
 )
 
 var transpileOnly *bool
@@ -51,7 +52,9 @@ func main() {
 		mermaidlive.GetFS(),
 		countdownDelay,
 	)
-	server.Run(*port)
+	go server.Run(*port)
+	percounter.GlobalEmergencyPersistence().Init()
+	percounter.GlobalEmergencyPersistence().PersistAndExitOnSignal()
 }
 
 func init() {
