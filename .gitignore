@@ -194,3 +194,4 @@ dist
 reports/
 mermaidlive
 *.gcounter
+*.db

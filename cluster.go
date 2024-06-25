@@ -23,19 +23,22 @@ type Cluster struct {
 	peerLocator PeerLocator
 }
 
-func NewCluster(events *pubsub.PubSub[string, Event]) *Cluster {
+func NewCluster(events *pubsub.PubSub[string, Event], clusterEventObserver *PersistentClusterObserver) *Cluster {
 	counterDirectory := GetCounterDirectory()
 	log.Println("Counter directory:", counterDirectory)
-	cluster := zmqcluster.NewZmqCluster(GetCounterIdentity(), getFlyZmqBindAddr())
+	identity := GetCounterIdentity()
+
+	cluster := zmqcluster.NewZmqCluster(identity, getFlyZmqBindAddr())
 
 	counterListener := NewCounterListener(events)
 	counter := percounter.NewObservableZmqMultiGcounterInCluster(
-		GetCounterIdentity(),
+		identity,
 		counterDirectory,
 		cluster,
 		counterListener,
 	)
 	counter.ShouldPersistOnSignal()
+	counter.SetClusterObserver(clusterEventObserver)
 	if err := counter.LoadAllSync(); err != nil {
 		log.Printf("failed to load all counters, continuing nonetheless: %v", err)
 	}

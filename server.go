@@ -22,31 +22,37 @@ import (
 )
 
 type Server struct {
-	port              string
-	server            *gin.Engine
-	events            *pubsub.PubSub[string, Event]
-	fsm               *AsyncFSM
-	visitorTracker    *VisitorTracker
-	peerSource        *Cluster
-	uiFilesystem      http.FileSystem
-	serverContext     context.Context
-	activeConnections sync.WaitGroup
+	port                 string
+	server               *gin.Engine
+	events               *pubsub.PubSub[string, Event]
+	fsm                  *AsyncFSM
+	visitorTracker       *VisitorTracker
+	peerSource           *Cluster
+	uiFilesystem         http.FileSystem
+	serverContext        context.Context
+	activeConnections    sync.WaitGroup
+	clusterEventObserver *PersistentClusterObserver
 }
 
 func NewServerWithOptions(port string,
 	events *pubsub.PubSub[string, Event],
 	fs http.FileSystem,
 	delay time.Duration) *Server {
-	peerSource := NewCluster(events)
+	clusterEventObserver := NewPersistentClusterObserver(
+		GetCounterIdentity(),
+		// to do: close on shutdown?
+	)
+	peerSource := NewCluster(events, clusterEventObserver)
 	visitorTracker := NewVisitorTracker(events)
 	server := &Server{
-		port:           port,
-		server:         configureGin(),
-		events:         events,
-		fsm:            NewCustomAsyncFSM(events, delay),
-		visitorTracker: visitorTracker,
-		peerSource:     peerSource,
-		uiFilesystem:   fs,
+		port:                 port,
+		server:               configureGin(),
+		events:               events,
+		fsm:                  NewCustomAsyncFSM(events, delay),
+		visitorTracker:       visitorTracker,
+		peerSource:           peerSource,
+		uiFilesystem:         fs,
+		clusterEventObserver: clusterEventObserver,
 	}
 	server.configureRateLimiting()
 	server.setupRoutes()
