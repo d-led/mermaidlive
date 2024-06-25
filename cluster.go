@@ -124,8 +124,8 @@ func (ps *Cluster) getPeers() {
 		log.Printf("Peers changed %v -> %v", ps.peers, peers)
 		ps.peers = peers
 		ps.counter.UpdatePeers(zmqPeers(peers))
+		ps.events.Pub(GetReplicasEvent(replicaCount), Topic)
 	}
-	ps.events.Pub(GetReplicasEvent(replicaCount), Topic)
 }
 
 func zmqAddressOf(peer string) string {
