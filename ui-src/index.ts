@@ -1,6 +1,9 @@
 console.log(`loaded index.js`);
 
 document.lastInput = "";
+document.myReplica = null;
+
+const sourceReplicaIdKey = "Source-Replica-Id";
 
 $(async function () {
   await reRenderGraph("waiting", "");
@@ -190,6 +193,10 @@ async function processEvent(event) {
       showReplicasActive(event?.properties?.param);
       // do not show this event in the log
       return;
+    case "ConnectedToReplica":
+        document.myReplica = event?.properties?.param;
+        // do not show this event in the log
+        return;
     case "TotalVisitors":
       showTotalVisitors(event?.properties?.param);
       // do not show this event in the log
@@ -215,13 +222,18 @@ async function postCommand(command: string) {
       cache: "no-cache",
       headers: {
         "Content-Type": "application/json",
+        sourceReplicaIdKey: `${document.myReplica}`,
       },
       redirect: "follow",
       referrerPolicy: "no-referrer",
       body: "{}",
     });
-    // to do: when sync
-    // console.log(await response.json());
+    await response.json();
+    const sourceReplicaId = response.headers.get(sourceReplicaIdKey);
+    if (sourceReplicaId != document.myReplica) {
+      addAlert(`Command sent to another replica: ${sourceReplicaId}!=${document.myReplica}.
+        The state machine missed the command...`, "info");
+    }
   } catch (err) {
     console.log("ERROR: posting command:", err?.message ?? err);
   }
@@ -286,4 +298,21 @@ function flashConnectedAlert() {
   $("#connected-alert").fadeTo(500, 50, function () {
     $("#connected-alert").slideUp(500);
   });
+}
+
+function addAlert(text: string, alertType: string) {
+  // https://getbootstrap.com/docs/5.3/components/alerts/
+  const alertPlaceholder = document.getElementById('alert-placeholder');
+    const wrapper = document.createElement('div')
+    wrapper.innerHTML = [
+      `<div class="alert alert-${alertType} alert-dismissible fade show" role="alert">`,
+      `   <div>${text}</div>`,
+      '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+      '</div>'
+    ].join('')
+    setTimeout(function() {
+      $(wrapper).find('.alert').alert('close');
+    }, 3000);
+  
+    alertPlaceholder?.append(wrapper)
 }

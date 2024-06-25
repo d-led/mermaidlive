@@ -17,6 +17,7 @@ const VisitorLeftEvent = "VisitorLeft"
 const VisitorsActiveEvent = "VisitorsActive"
 const TotalVisitorsEvent = "TotalVisitors"
 const TotalClusterVisitorsActiveEvent = "TotalClusterVisitorsActive"
+const SourceReplicaIdKey = "Source-Replica-Id"
 
 type PeerLocator interface {
 	GetPeers() ([]string, int, error)

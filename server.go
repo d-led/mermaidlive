@@ -94,7 +94,13 @@ func (s *Server) setupRoutes() {
 
 	s.server.POST("/commands/:command", func(ctx *gin.Context) {
 		command := ctx.Param("command")
+		sourceReplicaId := strings.Join(ctx.Request.Header[http.CanonicalHeaderKey(SourceReplicaIdKey)], "")
 		log.Println("command called:", command)
+		myReplicaId := getPublicReplicaId()
+		if sourceReplicaId != myReplicaId {
+			log.Printf("Command and Event Stream Replica ID mismatch: %s != %s", sourceReplicaId, myReplicaId)
+		}
+		ctx.Header(SourceReplicaIdKey, myReplicaId)
 		switch command {
 		case "start":
 			s.fsm.StartWork()
@@ -136,6 +142,7 @@ func (s *Server) setupRoutes() {
 		streamOneEvent(c, NewEventWithParam("Revision", versioninfo.Revision))
 		streamOneEvent(c, NewEventWithParam("LastSeenState", s.fsm.CurrentState()))
 		streamOneEvent(c, GetReplicasEvent(1))
+		streamOneEvent(c, NewEventWithParam("ConnectedToReplica", getPublicReplicaId()))
 
 		// callback returns false on end of processing
 		c.Stream(func(w io.Writer) bool {
