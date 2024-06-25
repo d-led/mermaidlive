@@ -1,12 +1,16 @@
 package mermaidlive
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/carlmjohnson/versioninfo"
@@ -18,13 +22,15 @@ import (
 )
 
 type Server struct {
-	port           string
-	server         *gin.Engine
-	events         *pubsub.PubSub[string, Event]
-	fsm            *AsyncFSM
-	visitorTracker *VisitorTracker
-	peerSource     *Cluster
-	uiFilesystem   http.FileSystem
+	port              string
+	server            *gin.Engine
+	events            *pubsub.PubSub[string, Event]
+	fsm               *AsyncFSM
+	visitorTracker    *VisitorTracker
+	peerSource        *Cluster
+	uiFilesystem      http.FileSystem
+	serverContext     context.Context
+	activeConnections sync.WaitGroup
 }
 
 func NewServerWithOptions(port string,
@@ -44,6 +50,7 @@ func NewServerWithOptions(port string,
 	}
 	server.configureRateLimiting()
 	server.setupRoutes()
+	server.setupSignalHandler()
 	return server
 }
 
@@ -114,7 +121,9 @@ func (s *Server) setupRoutes() {
 		c.Header("Connection", "Keep-Alive")
 		c.Header("Keep-Alive", "timeout=10, max=1000")
 		s.visitorTracker.Joined()
+		s.activeConnections.Add(1)
 		defer s.visitorTracker.Left()
+		defer s.activeConnections.Done()
 
 		ctx := c.Request.Context()
 		closeNotify := c.Writer.CloseNotify()
@@ -131,6 +140,10 @@ func (s *Server) setupRoutes() {
 		// callback returns false on end of processing
 		c.Stream(func(w io.Writer) bool {
 			select {
+			case <-s.serverContext.Done():
+				log.Printf("closing the connection: server shutting down")
+				return false
+
 			case <-ctx.Done():
 				log.Printf("client disconnected")
 				return false
@@ -146,6 +159,46 @@ func (s *Server) setupRoutes() {
 			}
 		})
 	})
+}
+
+func (s *Server) setupSignalHandler() {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT,
+	)
+	serverContext, triggerShutdown := context.WithCancel(context.Background())
+	s.serverContext = serverContext
+	go func() {
+		sig := <-signals
+		log.Printf("Received signal: %v, gracefully shutting down the server", sig)
+		triggerShutdown()
+	}()
+}
+
+func (s *Server) WaitToDrainConnections() {
+	// wait for global context to be cancelled
+	<-s.serverContext.Done()
+	// now wait for all connections to stop
+	log.Println("Waiting to close all connections...")
+
+	// but with a safe timeout
+	done := make(chan bool, 1)
+	go func() {
+		s.activeConnections.Wait()
+		done <- true
+	}()
+	select {
+	case <-done:
+		log.Println("All connections drained safely")
+	case <-time.After(time.Second):
+		log.Println("Did not close all connections on time. Forcing exit...")
+	}
+
+	// allow counters to propagate (opportunistically)
+	time.Sleep(100 * time.Millisecond)
 }
 
 func (s *Server) getUIUrl() string {

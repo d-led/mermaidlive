@@ -53,6 +53,7 @@ func main() {
 		countdownDelay,
 	)
 	go server.Run(*port)
+	server.WaitToDrainConnections()
 	percounter.GlobalEmergencyPersistence().Init()
 	percounter.GlobalEmergencyPersistence().PersistAndExitOnSignal()
 }
