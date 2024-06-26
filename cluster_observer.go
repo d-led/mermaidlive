@@ -17,18 +17,14 @@ func NewPersistentClusterObserver(identity string) *PersistentClusterObserver {
 	}
 }
 
-func (o *PersistentClusterObserver) AfterMessageSent(peer string, msg interface{}) {
+func (o *PersistentClusterObserver) AfterMessageSent(peer string, msg []byte) {
 	o.Act(o, func() {
-		if message, ok := msg.([]byte); ok {
-			log.Printf("Message sent to %s: %s", peer, string(message))
-		}
+		log.Printf("Message sent to %s: %s", peer, string(msg))
 	})
 }
 
-func (o *PersistentClusterObserver) AfterMessageReceived(peer string, msg interface{}) {
+func (o *PersistentClusterObserver) AfterMessageReceived(peer string, msg []byte) {
 	o.Act(o, func() {
-		if message, ok := msg.([]byte); ok {
-			log.Printf("Message received from %s: %s", peer, message)
-		}
+		log.Printf("Message received from %s: %s", peer, msg)
 	})
 }
