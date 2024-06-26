@@ -23,13 +23,10 @@ type Cluster struct {
 	peerLocator PeerLocator
 }
 
-func NewCluster(events *pubsub.PubSub[string, Event], clusterEventObserver *PersistentClusterObserver) *Cluster {
+func NewCluster(events *pubsub.PubSub[string, Event], clusterEventObserver *PersistentClusterObserver, cluster zmqcluster.Cluster) *Cluster {
 	counterDirectory := GetCounterDirectory()
 	log.Println("Counter directory:", counterDirectory)
 	identity := GetCounterIdentity()
-
-	cluster := zmqcluster.NewZmqCluster(identity, getFlyZmqBindAddr())
-
 	counterListener := NewCounterListener(events)
 	counter := percounter.NewObservableZmqMultiGcounterInCluster(
 		identity,

@@ -15,6 +15,7 @@ import (
 
 	"github.com/carlmjohnson/versioninfo"
 	"github.com/cskr/pubsub/v2"
+	"github.com/d-led/zmqcluster"
 	"github.com/gin-gonic/gin"
 	"github.com/ulule/limiter/v3"
 	gm "github.com/ulule/limiter/v3/drivers/middleware/gin"
@@ -42,7 +43,8 @@ func NewServerWithOptions(port string,
 		GetCounterIdentity(),
 		// to do: close on shutdown?
 	)
-	peerSource := NewCluster(events, clusterEventObserver)
+	cluster := zmqcluster.NewZmqCluster(GetCounterIdentity(), getFlyZmqBindAddr())
+	peerSource := NewCluster(events, clusterEventObserver, cluster)
 	visitorTracker := NewVisitorTracker(events)
 	server := &Server{
 		port:                 port,
