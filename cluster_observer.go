@@ -60,6 +60,8 @@ func (o *PersistentClusterObserver) AfterMessageReceived(peer string, msg []byte
 		if err == nil {
 			peer = counterMessage.SourcePeer
 			o.trackCounterIdentitySync(&counterMessage)
+		} else {
+			log.Println("error parsing gcounter network message", err)
 		}
 		msgString := string(msg)
 		o.messagesUpToNow = append(o.messagesUpToNow,

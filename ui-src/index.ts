@@ -73,7 +73,7 @@ async function subscribe(
 
             await processingFunc(message);
           } catch (err) {
-            console.log("MESSAGE WAS:", currentMessage);
+            console.log("MESSAGE WAS:", messageToProcess);
             console.log("ERROR:", err?.message ?? err);
           }
         } while (true);

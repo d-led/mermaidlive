@@ -1,7 +1,7 @@
 console.log(`loaded cluster.js`);
 
-document.lastInput = "";
-var clusterEvents = [];
+var lastInput = "";
+var clusterEvents: { from: string; to: string; arrowText: string; }[] = [];
 
 const sourceReplicaIdKey = "Source-Replica-Id";
 
@@ -73,7 +73,7 @@ async function subscribe(
 
             await processingFunc(message);
           } catch (err) {
-            console.log("MESSAGE WAS:", currentMessage);
+            console.log("MESSAGE WAS:", messageToProcess);
             console.log("ERROR:", err?.message ?? err);
           }
         } while (true);
@@ -177,11 +177,11 @@ async function reRenderGraph() {
     return;
   }
   let input = updateGraphDefinition();
-  if (input === document.lastInput) {
+  if (input === lastInput) {
     console.log("nothing to re-render");
     return;
   }
-  document.lastInput = input;
+  lastInput = input;
   try {
     let rendered = await mermaid.mermaidAPI.render("temporary-graph", input);
     let graph = document.querySelector("#graph");
@@ -196,7 +196,11 @@ async function reRenderGraph() {
 }
 
 function processClusterMessage(event) {
-  clusterEvents.push(renderableClusterEvent(event))
+  const e = renderableClusterEvent(event);
+  if (!e.arrowText) {
+    return;
+  }
+  clusterEvents.push(e);
 }
 
 function renderableClusterEvent(event) {
@@ -208,7 +212,6 @@ function renderableClusterEvent(event) {
     to,
     arrowText,
   };
-  console.log("event to render:", re)
   return re;
 }
 
@@ -216,12 +219,26 @@ function normalizeParticipant(participant) {
   if (participant.indexOf(':') == -1) {
     return participant;
   }
+  
+  // opportunistic: ipv6
+  let url = tryParseUrl(participant);
+  if (!!url) {
+    return url;
+  }
+  // opportunistic: ipv4
+  url = tryParseUrl(participant.replaceAll('[','').replaceAll(']', ''));
+  if (!!url) {
+    return url;
+  }
+  return `${participant}`.replaceAll(':', '/');
+}
+
+function tryParseUrl(input) {
   try {
-    const url = new URL(participant);
+    const url = new URL(input);
     return url.hostname;
   } catch (e) {
-    console.log("could not parse participant:", participant, e);
-    return `${participant}`.replaceAll(':', '/');
+    return null;
   }
 }
 
@@ -234,6 +251,8 @@ function arrowTextFrom(event) {
         peers: orig.peers,
         total: sumUp(orig.peers),
       });
+    } else {
+      console.log("message", orig);
     }
     return event?.properties?.msg ?? 'unknown-msg';
   } catch (e) {
