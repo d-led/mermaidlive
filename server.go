@@ -39,11 +39,14 @@ func NewServerWithOptions(port string,
 	events *pubsub.PubSub[string, Event],
 	fs http.FileSystem,
 	delay time.Duration) *Server {
+	myIp := ChoosePeerLocator().GetMyIP()
 	clusterEventObserver := NewPersistentClusterObserver(
 		GetCounterIdentity(),
-		// to do: close on shutdown?
+		myIp,
 	)
 	cluster := zmqcluster.NewZmqCluster(GetCounterIdentity(), getFlyZmqBindAddr())
+	log.Printf("My IP: %s", myIp)
+	cluster.SetMyIP(ChoosePeerLocator().GetMyIP())
 	peerSource := NewCluster(events, clusterEventObserver, cluster)
 	visitorTracker := NewVisitorTracker(events)
 	server := &Server{

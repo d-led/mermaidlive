@@ -67,6 +67,15 @@ func (l *TraefikPeerLocator) GetPeers() ([]string, int, error) {
 	return res, len(replicas.LoadBalancer.Servers), nil
 }
 
+func (l *TraefikPeerLocator) GetMyIP() string {
+	myIP, err := getMyIPv4()
+	if err != nil {
+		log.Printf("Could not get my ip: %v", err)
+		return ""
+	}
+	return myIP
+}
+
 func getIPOf(replicaUrl string) (string, error) {
 	u, err := url.Parse(replicaUrl)
 	if err != nil {

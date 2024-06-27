@@ -31,6 +31,10 @@ func (l *FlyPeerLocator) GetPeers() ([]string, int, error) {
 	return peers, len(addrs), nil
 }
 
+func (l *FlyPeerLocator) GetMyIP() string {
+	return getFlyPrivateIP()
+}
+
 func getFlyPrivateIP() string {
 	return os.Getenv("FLY_PRIVATE_IP")
 }

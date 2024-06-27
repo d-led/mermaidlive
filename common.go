@@ -21,6 +21,7 @@ const SourceReplicaIdKey = "Source-Replica-Id"
 
 type PeerLocator interface {
 	GetPeers() ([]string, int, error)
+	GetMyIP() string
 }
 
 var DoEmbed = false
