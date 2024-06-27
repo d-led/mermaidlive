@@ -4,6 +4,7 @@ var lastInput = "";
 var clusterEvents: { from: string; to: string; arrowText: string; }[] = [];
 
 const sourceReplicaIdKey = "Source-Replica-Id";
+const doCorrectMissingIdentities = true;
 
 $(async function () {
   await reRenderGraph();
@@ -201,18 +202,42 @@ function processClusterMessage(event) {
     return;
   }
   clusterEvents.push(e);
+  if (doCorrectMissingIdentities && (e.arrowText.indexOf('hello')==0 || e.arrowText.indexOf('ohai')==0)) {
+    correctClusterEvents(e);
+  }
 }
 
 function renderableClusterEvent(event) {
   let arrowText = arrowTextFrom(event);
   let from = normalizeParticipant(event?.properties?.src ?? 'unknown-src');
   let to = normalizeParticipant(event?.properties?.dst ?? 'unknown-dst');
+  let mapping = ipMappingFrom(event);
   let re = {
     from,
     to,
     arrowText,
+    mapping,
   };
   return re;
+}
+
+function correctClusterEvents(e) {
+  console.log("mapping", e.mapping);
+  if (!e.mapping) {
+    return;
+  }
+  clusterEvents.forEach((e,i) =>{
+    if (e.from == e.mapping.ip) {
+      e.from = e.mapping.peer;
+      clusterEvents[i] = e;
+      console.log(`${e.from} -> ${e.mapping.peer}`);
+    }
+    if (e.to == e.mapping.ip) {
+      e.to = e.mapping.peer;
+      clusterEvents[i] = e;
+      console.log(`${e.to} -> ${e.mapping.peer}`);
+    }
+  });
 }
 
 function normalizeParticipant(participant) {
@@ -252,12 +277,32 @@ function arrowTextFrom(event) {
         total: sumUp(orig.peers),
       });
     } else {
-      console.log("message", orig);
+      switch (orig?.type) {
+        case "peer.ohai.network.message":
+          return `ohai, ${orig?.metadata?.my_ip} == ${orig?.source_peer}`;
+        case "peer.hello.network.message":
+          return `hello, ${orig?.metadata?.my_ip} == ${orig?.source_peer}`;
+        default:
+          return event?.properties?.msg ?? 'unknown-msg';
+      }
     }
-    return event?.properties?.msg ?? 'unknown-msg';
   } catch (e) {
     console.log("error parsing message", e)
   }
+}
+
+function ipMappingFrom(event) {
+  try {
+    const orig = JSON.parse(event?.properties?.msg);
+    const ip = orig?.metadata?.my_ip;
+    const peer = orig?.source_peer;
+    if (ip && peer) {
+        return ({ip, peer})
+    }
+  } catch (e) {
+    console.log("error parsing message", e)
+  }
+  return null;
 }
 
 function sumUp(peers) {
