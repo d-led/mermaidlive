@@ -95,7 +95,7 @@ func (ps *Cluster) listenToInternalEventsForever() {
 		case VisitorJoinedEvent:
 			ps.counter.Increment(NewConnectionsCounter)
 			ps.counter.Increment(StartedConnectionsCounter)
-			ps.events.Pub(NewEventWithParam(TotalVisitorsEvent, ps.counter.Value(NewConnectionsCounter)), Topic)
+			ps.events.Pub(NewEventWithParam(TotalVisitorsEvent, ps.counter.Value(NewConnectionsCounter)), Topic, ClusterMessageTopic)
 			sendInitialClusterConnectionCount(ps.events, ps.counter)
 		case VisitorLeftEvent:
 			ps.counter.Increment(ClosedConnectionsCounter)
@@ -121,7 +121,7 @@ func (ps *Cluster) getPeers() {
 		log.Printf("Peers changed %v -> %v", ps.peers, peers)
 		ps.peers = peers
 		ps.counter.UpdatePeers(zmqPeers(peers))
-		ps.events.Pub(GetReplicasEvent(replicaCount), Topic)
+		ps.events.Pub(GetReplicasEvent(replicaCount), Topic, ClusterMessageTopic)
 	}
 }
 
@@ -160,7 +160,7 @@ func sendInitialClusterConnectionCount(
 	started := counter.Value(StartedConnectionsCounter)
 	closed := counter.Value(ClosedConnectionsCounter)
 
-	events.Pub(NewEventWithParam(TotalClusterVisitorsActiveEvent, started-closed))
+	events.Pub(NewEventWithParam(TotalClusterVisitorsActiveEvent, started-closed), Topic, ClusterMessageTopic)
 }
 
 type nullPeerLocator struct {

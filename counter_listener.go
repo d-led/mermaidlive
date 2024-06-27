@@ -26,7 +26,7 @@ func (n *CounterListener) OnNewCount(ev percounter.CountEvent) {
 		switch ev.Name {
 		case NewConnectionsCounter:
 			log.Println("New visitor count:", ev.Count)
-			n.events.Pub(NewEventWithParam(TotalVisitorsEvent, ev.Count), Topic)
+			n.events.Pub(NewEventWithParam(TotalVisitorsEvent, ev.Count), Topic, ClusterMessageTopic)
 
 		case StartedConnectionsCounter:
 			log.Printf("started event: %v", ev)
@@ -35,7 +35,7 @@ func (n *CounterListener) OnNewCount(ev percounter.CountEvent) {
 				TotalClusterVisitorsActiveEvent,
 				n.startedConnections-
 					n.closedConnections,
-			), Topic)
+			), Topic, ClusterMessageTopic)
 
 		case ClosedConnectionsCounter:
 			log.Printf("closed event: %v", ev)
@@ -44,7 +44,7 @@ func (n *CounterListener) OnNewCount(ev percounter.CountEvent) {
 				TotalClusterVisitorsActiveEvent,
 				n.startedConnections-
 					n.closedConnections,
-			), Topic)
+			), Topic, ClusterMessageTopic)
 
 		default:
 			// ignore the event

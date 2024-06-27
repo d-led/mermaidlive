@@ -29,7 +29,7 @@ func StartWatching(eventPublisher *pubsub.PubSub[string, Event]) *fsnotify.Watch
 				if event.Has(fsnotify.Write) {
 					log.Println("modified: ", event.Name)
 					Refresh()
-					eventPublisher.Pub(NewSimpleEvent("ResourcesRefreshed"), Topic)
+					eventPublisher.Pub(NewSimpleEvent("ResourcesRefreshed"), Topic, ClusterMessageTopic)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {

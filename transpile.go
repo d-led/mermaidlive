@@ -17,6 +17,7 @@ func Refresh() {
 func copyStatic() {
 	for _, f := range []string{
 		"index.html",
+		"cluster.html",
 		"index.css",
 	} {
 		text, err := os.ReadFile(filepath.Join(uiSrc, f))
@@ -29,6 +30,7 @@ func transpile() {
 	result := api.Build(api.BuildOptions{
 		EntryPoints: []string{
 			filepath.Join(uiSrc, "index.ts"),
+			filepath.Join(uiSrc, "cluster.ts"),
 		},
 		Bundle:            true,
 		Outdir:            dist,

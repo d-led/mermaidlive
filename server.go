@@ -178,6 +178,46 @@ func (s *Server) setupRoutes() {
 			}
 		})
 	})
+
+	clusterGroup := s.server.Group("cluster")
+	// httpie> http -S http://localhost:8080/cluster/events
+	clusterGroup.GET("/events", func(c *gin.Context) {
+		c.Header("Connection", "Keep-Alive")
+		c.Header("Keep-Alive", "timeout=10, max=1000")
+
+		ctx := c.Request.Context()
+		closeNotify := c.Writer.CloseNotify()
+
+		myEvents := s.events.Sub(ClusterMessageTopic)
+		defer s.events.Unsub(myEvents, ClusterMessageTopic)
+
+		streamOneEvent(c, NewSimpleEvent("StartedListening"))
+		streamOneEvent(c, NewEventWithParam("ConnectedToRegion", getFlyRegion()))
+		streamOneEvent(c, GetReplicasEvent(1))
+		streamOneEvent(c, NewEventWithParam("ConnectedToReplica", getPublicReplicaId()))
+
+		// callback returns false on end of processing
+		c.Stream(func(w io.Writer) bool {
+			select {
+			case <-s.serverContext.Done():
+				log.Printf("closing the connection: server shutting down")
+				return false
+
+			case <-ctx.Done():
+				log.Printf("client disconnected")
+				return false
+
+			case <-closeNotify:
+				log.Printf("client closed the connection")
+				return false
+
+			case event := <-myEvents:
+				streamOneEvent(c, event)
+
+				return true
+			}
+		})
+	})
 }
 
 func (s *Server) setupSignalHandler() {
