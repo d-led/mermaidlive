@@ -3,9 +3,9 @@ package mermaidlive
 import "time"
 
 type Event struct {
-	Timestamp  string         `json:"timestamp"`
-	Name       string         `json:"name"`
-	Properties map[string]any `json:"properties"`
+	Timestamp  string                 `json:"timestamp"`
+	Name       string                 `json:"name"`
+	Properties map[string]interface{} `json:"properties"`
 }
 
 func NewSimpleEvent(name string) Event {

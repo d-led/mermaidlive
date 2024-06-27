@@ -43,6 +43,7 @@ func NewServerWithOptions(port string,
 	clusterEventObserver := NewPersistentClusterObserver(
 		GetCounterIdentity(),
 		myIp,
+		events,
 	)
 	cluster := zmqcluster.NewZmqCluster(GetCounterIdentity(), getFlyZmqBindAddr())
 	log.Printf("My IP: %s", myIp)

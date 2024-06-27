@@ -5,16 +5,17 @@ import (
 	"log"
 
 	"github.com/Arceliar/phony"
+	"github.com/cskr/pubsub/v2"
 	"github.com/d-led/percounter"
 )
 
 const maxEventsWithUnknownPeersBeforePublishingAllEvents = 8
 
 type messageEvent struct {
-	SeenAt string `json:"seen_at"`
-	Src    string `json:"src"`
-	Dst    string `json:"dst"`
-	Msg    string `json:"msg"`
+	SeenAt string
+	Src    string
+	Dst    string
+	Msg    string
 }
 
 type PersistentClusterObserver struct {
@@ -22,13 +23,15 @@ type PersistentClusterObserver struct {
 	identity         string
 	peerIpToIdentity map[string]string
 	messagesUpToNow  []*messageEvent
+	events           *pubsub.PubSub[string, Event]
 }
 
-func NewPersistentClusterObserver(identity string, myIP string) *PersistentClusterObserver {
+func NewPersistentClusterObserver(identity string, myIP string, events *pubsub.PubSub[string, Event]) *PersistentClusterObserver {
 	return &PersistentClusterObserver{
 		identity:         identity,
 		peerIpToIdentity: map[string]string{myIP: identity},
 		messagesUpToNow:  []*messageEvent{},
+		events:           events,
 	}
 }
 
@@ -118,6 +121,15 @@ func (o *PersistentClusterObserver) unknownPeerSync(peer string) bool {
 }
 
 func (o *PersistentClusterObserver) publishPendingEventsSync() {
-	// clear the pending events for now
+	for _, msg := range o.messagesUpToNow {
+		e := NewSimpleEvent(ClusterMessageEvent)
+		e.Properties = map[string]interface{}{
+			"seen_at": msg.SeenAt,
+			"src":     msg.Src,
+			"dst":     msg.Dst,
+			"msg":     msg.Msg,
+		}
+		o.events.Pub(e, ClusterMessageTopic)
+	}
 	o.messagesUpToNow = []*messageEvent{}
 }
