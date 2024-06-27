@@ -146,7 +146,7 @@ func ChoosePeerLocator() PeerLocator {
 	if traefikServicesUrl != "" {
 		return NewTraefikPeerLocator(traefikServicesUrl)
 	}
-	return nil
+	return &nullPeerLocator{}
 }
 
 func getTraefikServicesUrl() string {
@@ -161,4 +161,15 @@ func sendInitialClusterConnectionCount(
 	closed := counter.Value(ClosedConnectionsCounter)
 
 	events.Pub(NewEventWithParam(TotalClusterVisitorsActiveEvent, started-closed))
+}
+
+type nullPeerLocator struct {
+}
+
+func (_ *nullPeerLocator) GetPeers() ([]string, int, error) {
+	return nil, 0, nil
+}
+
+func (_ *nullPeerLocator) GetMyIP() string {
+	return ""
 }
