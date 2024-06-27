@@ -1,7 +1,7 @@
-console.log(`loaded index.js`);
+console.log(`loaded cluster.js`);
 
 document.lastInput = "";
-document.myReplica = null;
+var clusterEvents = [];
 
 const sourceReplicaIdKey = "Source-Replica-Id";
 
@@ -130,8 +130,6 @@ async function processEvent(event) {
     return;
   }
 
-  console.log("INCOMING_EVENT:", event);
-
   switch (event.name) {
     case "StartedListening":
     case "ConnectedToRegion":
@@ -155,40 +153,107 @@ async function processEvent(event) {
       return;
     case "ConnectedToReplica":
         document.myReplica = event?.properties?.param;
-        // do not show this event in the log
-        return;
+        break;
     case "TotalVisitors":
       showTotalVisitors(event?.properties?.param);
       // do not show this event in the log
       return;
+    case "ClusterMessage":
+      processClusterMessage(event);
+      await reRenderGraph();
+      // do not show this event in the log
+      return;
     default:
       console.log(`unhandled event: ${event.name}`);
-      // await reRenderGraph("", "");
-      break;
+      return;
   }
+
+  console.log("INCOMING_EVENT:", event);
 }
 
 async function reRenderGraph() {
+  if (!clusterEvents?.length) {
+    console.log("nothing to render");
+    return;
+  }
   let input = updateGraphDefinition();
   if (input === document.lastInput) {
     console.log("nothing to re-render");
     return;
   }
   document.lastInput = input;
-  let rendered = await mermaid.mermaidAPI.render("temporary-graph", input);
-  let graph = document.querySelector("#graph");
-  if (graph) {
-    graph.innerHTML = rendered.svg;
-  } else {
-    console.log("ERROR: could not find target element for redrawing");
+  try {
+    let rendered = await mermaid.mermaidAPI.render("temporary-graph", input);
+    let graph = document.querySelector("#graph");
+    if (graph) {
+      graph.innerHTML = rendered.svg;
+    } else {
+      console.log("ERROR: could not find target element for redrawing");
+    }
+  } catch (e) {
+    console.log("error rendering graph:", e);
   }
+}
+
+function processClusterMessage(event) {
+  clusterEvents.push(renderableClusterEvent(event))
+}
+
+function renderableClusterEvent(event) {
+  let arrowText = arrowTextFrom(event);
+  let from = normalizeParticipant(event?.properties?.src ?? 'unknown-src');
+  let to = normalizeParticipant(event?.properties?.dst ?? 'unknown-dst');
+  let re = {
+    from,
+    to,
+    arrowText,
+  };
+  console.log("event to render:", re)
+  return re;
+}
+
+function normalizeParticipant(participant) {
+  if (participant.indexOf(':') == -1) {
+    return participant;
+  }
+  try {
+    const url = new URL(participant);
+    return url.hostname;
+  } catch (e) {
+    console.log("could not parse participant:", participant, e);
+    return `${participant}`.replaceAll(':', '/');
+  }
+}
+
+function arrowTextFrom(event) {
+  try {
+    let orig = JSON.parse(event?.properties?.msg);
+    if (orig.name && orig.peers) {
+      return JSON.stringify({
+        name: orig.name,
+        peers: orig.peers,
+        total: sumUp(orig.peers),
+      });
+    }
+    return event?.properties?.msg ?? 'unknown-msg';
+  } catch (e) {
+    console.log("error parsing message", e)
+  }
+}
+
+function sumUp(peers) {
+  let sum = 0;
+  Object.keys(peers).forEach(peer=>sum+=parseInt(peers[peer]));
+  return sum;
 }
 
 function updateGraphDefinition() {
   let res = `sequenceDiagram
-      A->>+B: {"a": 42}
-      B->>+A: {"b": 33}
   `;
+  clusterEvents.forEach(e => {
+    res+=`${e.from}->>+${e.to}: ${e.arrowText}
+    `
+  });
   return res;
 }
 

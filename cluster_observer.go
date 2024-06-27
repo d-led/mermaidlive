@@ -22,6 +22,7 @@ type PersistentClusterObserver struct {
 	phony.Inbox
 	identity         string
 	peerIpToIdentity map[string]string
+	peerIdentities   map[string]bool
 	messagesUpToNow  []*messageEvent
 	events           *pubsub.PubSub[string, Event]
 }
@@ -30,6 +31,7 @@ func NewPersistentClusterObserver(identity string, myIP string, events *pubsub.P
 	return &PersistentClusterObserver{
 		identity:         identity,
 		peerIpToIdentity: map[string]string{myIP: identity},
+		peerIdentities:   map[string]bool{identity: true},
 		messagesUpToNow:  []*messageEvent{},
 		events:           events,
 	}
@@ -37,16 +39,16 @@ func NewPersistentClusterObserver(identity string, myIP string, events *pubsub.P
 
 func (o *PersistentClusterObserver) AfterMessageSent(peer string, msg []byte) {
 	o.Act(o, func() {
+		msgString := string(msg)
+		o.messagesUpToNow = append(o.messagesUpToNow,
+			&messageEvent{SeenAt: o.identity, Src: o.identity, Dst: peer, Msg: msgString},
+		)
 		if peerIP, err := getIPOf(peer); err == nil {
 			peerIdentity, ok := o.peerIpToIdentity[peerIP]
 			if ok {
 				peer = peerIdentity
 			}
 		}
-		msgString := string(msg)
-		o.messagesUpToNow = append(o.messagesUpToNow,
-			&messageEvent{SeenAt: o.identity, Src: o.identity, Dst: peer, Msg: msgString},
-		)
 		log.Printf("Message sent to %s: %s", peer, msgString)
 	})
 }
@@ -77,17 +79,17 @@ func (o *PersistentClusterObserver) trackCounterIdentitySync(msg *percounter.Net
 		return
 	}
 	o.peerIpToIdentity[peerIP] = msg.SourcePeer
+	o.peerIdentities[msg.SourcePeer] = true
 	o.processEventsSync()
 }
 
 func (o *PersistentClusterObserver) processEventsSync() {
-	if len(o.messagesUpToNow) == 0 ||
-		!o.anyUnkownPeersSync() ||
-		o.countUnkownPeersSync() < maxEventsWithUnknownPeersBeforePublishingAllEvents {
-		return
+	if len(o.messagesUpToNow) > 0 &&
+		(!o.anyUnkownPeersSync() ||
+			o.countUnkownPeersSync() >= maxEventsWithUnknownPeersBeforePublishingAllEvents) {
+		log.Println("publishing cluster messages")
+		o.publishPendingEventsSync()
 	}
-	log.Println("ready to publish message events")
-	o.publishPendingEventsSync()
 }
 
 func (o *PersistentClusterObserver) anyUnkownPeersSync() bool {
@@ -116,8 +118,15 @@ func (o *PersistentClusterObserver) countUnkownPeersSync() int {
 }
 
 func (o *PersistentClusterObserver) unknownPeerSync(peer string) bool {
-	_, ok := o.peerIpToIdentity[peer]
-	return !ok
+	_, ipKnown := o.peerIpToIdentity[peer]
+	return !ipKnown && !o.peerIdentities[peer]
+}
+
+func (o *PersistentClusterObserver) idOfSync(peer string) string {
+	if id, ok := o.peerIpToIdentity[peer]; ok {
+		return id
+	}
+	return peer
 }
 
 func (o *PersistentClusterObserver) publishPendingEventsSync() {
@@ -125,8 +134,8 @@ func (o *PersistentClusterObserver) publishPendingEventsSync() {
 		e := NewSimpleEvent(ClusterMessageEvent)
 		e.Properties = map[string]interface{}{
 			"seen_at": msg.SeenAt,
-			"src":     msg.Src,
-			"dst":     msg.Dst,
+			"src":     o.idOfSync(msg.Src),
+			"dst":     o.idOfSync(msg.Dst),
 			"msg":     msg.Msg,
 		}
 		o.events.Pub(e, ClusterMessageTopic)
