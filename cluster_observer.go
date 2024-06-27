@@ -11,9 +11,10 @@ import (
 const maxEventsWithUnknownPeersBeforePublishingAllEvents = 8
 
 type messageEvent struct {
-	Src string
-	Dst string
-	Msg []byte
+	SeenAt string `json:"seen_at"`
+	Src    string `json:"src"`
+	Dst    string `json:"dst"`
+	Msg    string `json:"msg"`
 }
 
 type PersistentClusterObserver struct {
@@ -39,10 +40,11 @@ func (o *PersistentClusterObserver) AfterMessageSent(peer string, msg []byte) {
 				peer = peerIdentity
 			}
 		}
+		msgString := string(msg)
 		o.messagesUpToNow = append(o.messagesUpToNow,
-			&messageEvent{Src: o.identity, Dst: peer, Msg: msg},
+			&messageEvent{SeenAt: o.identity, Src: o.identity, Dst: peer, Msg: msgString},
 		)
-		log.Printf("Message sent to %s: %s", peer, string(msg))
+		log.Printf("Message sent to %s: %s", peer, msgString)
 	})
 }
 
@@ -54,10 +56,11 @@ func (o *PersistentClusterObserver) AfterMessageReceived(peer string, msg []byte
 			peer = counterMessage.SourcePeer
 			o.trackCounterIdentitySync(&counterMessage)
 		}
+		msgString := string(msg)
 		o.messagesUpToNow = append(o.messagesUpToNow,
-			&messageEvent{Src: peer, Dst: o.identity, Msg: msg},
+			&messageEvent{SeenAt: o.identity, Src: peer, Dst: o.identity, Msg: msgString},
 		)
-		log.Printf("Message received from %s: %s", peer, msg)
+		log.Printf("Message received from %s: %s", peer, msgString)
 	})
 }
 
