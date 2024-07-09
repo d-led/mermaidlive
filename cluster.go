@@ -15,6 +15,8 @@ import (
 
 const peerUpdateDelay = 5 * time.Second
 
+var firstPeerCountUpdated = false
+
 type Cluster struct {
 	events      *pubsub.PubSub[string, Event]
 	peers       []string
@@ -122,6 +124,9 @@ func (ps *Cluster) getPeers() {
 		ps.peers = peers
 		ps.counter.UpdatePeers(zmqPeers(peers))
 		ps.events.Pub(GetReplicasEvent(replicaCount), Topic, ClusterMessageTopic)
+	} else if !firstPeerCountUpdated {
+		ps.events.Pub(GetReplicasEvent(replicaCount), Topic, ClusterMessageTopic)
+		firstPeerCountUpdated = true
 	}
 }
 
