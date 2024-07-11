@@ -221,21 +221,21 @@ function renderableClusterEvent(event) {
   return re;
 }
 
-function correctClusterEvents(e) {
-  console.log("mapping", e.mapping);
-  if (!e.mapping) {
+function correctClusterEvents(newEvent) {
+  console.log("mapping", newEvent.mapping);
+  if (!newEvent.mapping) {
     return;
   }
   clusterEvents.forEach((e,i) =>{
-    if (e.from == e.mapping.ip) {
-      e.from = e.mapping.peer;
+    if (e.from == newEvent.mapping.ip) {
+      e.from = newEvent.mapping.peer;
       clusterEvents[i] = e;
-      console.log(`${e.from} -> ${e.mapping.peer}`);
+      console.log(`${e.from} -> ${newEvent.mapping.peer}`);
     }
-    if (e.to == e.mapping.ip) {
-      e.to = e.mapping.peer;
+    if (e.to == newEvent.mapping.ip) {
+      e.to = newEvent.mapping.peer;
       clusterEvents[i] = e;
-      console.log(`${e.to} -> ${e.mapping.peer}`);
+      console.log(`${e.to} -> ${newEvent.mapping.peer}`);
     }
   });
 }
