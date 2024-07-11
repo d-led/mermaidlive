@@ -27,6 +27,7 @@ type PeerLocator interface {
 }
 
 var DoEmbed = false
+var ClusterObservabilityEnabled = false
 
 func crashOnError(err error) {
 	if err != nil {

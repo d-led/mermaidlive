@@ -179,6 +179,12 @@ func (s *Server) setupRoutes() {
 		})
 	})
 
+	if ClusterObservabilityEnabled {
+		s.setupClusterObservabilityRoutes()
+	}
+}
+
+func (s *Server) setupClusterObservabilityRoutes() {
 	clusterGroup := s.server.Group("cluster")
 	// httpie> http -S http://localhost:8080/cluster/events
 	clusterGroup.GET("/events", func(c *gin.Context) {
