@@ -1,5 +1,5 @@
 ARG GO_VERSION=1
-FROM golang:${GO_VERSION}-bookworm as builder
+FROM golang:${GO_VERSION}-bookworm AS builder
 
 WORKDIR /usr/src/app
 COPY go.mod go.sum ./
@@ -7,7 +7,7 @@ RUN go mod download && go mod verify
 COPY . .
 RUN go run ./cmd/mermaidlive -transpile && CGO_ENABLED=0 go build --tags=embed -v -o /run-app ./cmd/mermaidlive
 
-FROM alpine:latest as alpine
+FROM alpine:latest AS alpine
 # create a user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 # prepare data dir
