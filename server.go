@@ -280,3 +280,10 @@ func streamOneEvent(c *gin.Context, event any) {
 	c.String(http.StatusOK, "\n")
 	c.Writer.(http.Flusher).Flush()
 }
+
+func init() {
+	if os.Getenv("MML_CLUSTER_OBSERVABILITY_ENABLED") == "true" {
+		log.Println("Cluster observability routes enabled")
+		ClusterObservabilityEnabled = true
+	}
+}
