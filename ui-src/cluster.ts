@@ -227,15 +227,15 @@ function correctClusterEvents(newEvent) {
     return;
   }
   clusterEvents.forEach((e,i) =>{
-    if (e.from == newEvent.mapping.ip) {
+    if (`${e.from}`.indexOf(newEvent.mapping.ip) !== -1) {
       e.from = newEvent.mapping.peer;
-      clusterEvents[i] = e;
       console.log(`${e.from} -> ${newEvent.mapping.peer}`);
-    }
-    if (e.to == newEvent.mapping.ip) {
-      e.to = newEvent.mapping.peer;
       clusterEvents[i] = e;
+    }
+    if (`${e.to}`.indexOf(newEvent.mapping.ip) !== -1) {
+      e.to = newEvent.mapping.peer;
       console.log(`${e.to} -> ${newEvent.mapping.peer}`);
+      clusterEvents[i] = e;
     }
   });
 }
