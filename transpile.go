@@ -9,17 +9,13 @@ import (
 )
 
 func Refresh() {
-	log.Println("transpiling & copying")
+	log.Printf("transpiling & copying: %v, %v", staticFilesToCopy(), esbuildEntrypoints())
 	transpile()
 	copyStatic()
 }
 
 func copyStatic() {
-	for _, f := range []string{
-		"index.html",
-		"cluster.html",
-		"index.css",
-	} {
+	for _, f := range staticFilesToCopy() {
 		text, err := os.ReadFile(filepath.Join(uiSrc, f))
 		crashOnError(err)
 		os.WriteFile(filepath.Join(dist, f), text, 0644)
@@ -28,14 +24,12 @@ func copyStatic() {
 
 func transpile() {
 	result := api.Build(api.BuildOptions{
-		EntryPoints: []string{
-			filepath.Join(uiSrc, "index.ts"),
-			filepath.Join(uiSrc, "cluster.ts"),
-		},
-		Bundle:            true,
-		Outdir:            dist,
-		MinifySyntax:      false,
-		MinifyWhitespace:  false,
+		EntryPoints:      esbuildEntrypoints(),
+		Bundle:           true,
+		Outdir:           dist,
+		MinifySyntax:     false,
+		MinifyWhitespace: false,
+
 		MinifyIdentifiers: false,
 		Sourcemap:         api.SourceMapInline,
 		Engines: []api.Engine{
@@ -47,4 +41,25 @@ func transpile() {
 		Write: true,
 	})
 	handleErrors(result.Errors)
+}
+
+func staticFilesToCopy() []string {
+	var res = []string{
+		"index.html",
+		"index.css",
+	}
+	if ClusterObservabilityEnabled {
+		res = append(res, "cluster.html")
+	}
+	return res
+}
+
+func esbuildEntrypoints() []string {
+	var res = []string{
+		filepath.Join(uiSrc, "index.ts"),
+	}
+	if ClusterObservabilityEnabled {
+		res = append(res, filepath.Join(uiSrc, "cluster.ts"))
+	}
+	return res
 }
