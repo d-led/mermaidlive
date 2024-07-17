@@ -19,6 +19,8 @@ services:
   mermaidlive:
     build:
       context: .
+      args:
+        - MML_CLUSTER_OBSERVABILITY_ENABLED=true
     environment:
       - TRAEFIK_SERVICES_URL=http://traefik:8080/api/http/services/mermaidlive%40docker
       - MML_CLUSTER_OBSERVABILITY_ENABLED=true

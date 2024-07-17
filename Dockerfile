@@ -1,6 +1,9 @@
 ARG GO_VERSION=1
 FROM golang:${GO_VERSION}-bookworm AS builder
 
+ARG MML_CLUSTER_OBSERVABILITY_ENABLED=false
+ENV MML_CLUSTER_OBSERVABILITY_ENABLED=$MML_CLUSTER_OBSERVABILITY_ENABLED
+
 WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
