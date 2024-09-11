@@ -182,17 +182,17 @@ async function processEvent(event) {
       // do not show this event in the log
       return;
     case "TotalClusterVisitorsActive":
-        showVisitorsActiveInCluster(event?.properties?.param);
-        // do not show this event in the log
-        return;
+      showVisitorsActiveInCluster(event?.properties?.param);
+      // do not show this event in the log
+      return;
     case "ReplicasActive":
       showReplicasActive(event?.properties?.param);
       // do not show this event in the log
       return;
     case "ConnectedToReplica":
-        document.myReplica = event?.properties?.param;
-        // do not show this event in the log
-        return;
+      document.myReplica = event?.properties?.param;
+      // do not show this event in the log
+      return;
     case "TotalVisitors":
       showTotalVisitors(event?.properties?.param);
       // do not show this event in the log
@@ -211,15 +211,17 @@ async function processEvent(event) {
 
 async function postCommand(command: string) {
   console.log("trying to post transition: ", command);
+  let headers: any = {
+    "Content-Type": "application/json",
+  };
+  headers[sourceReplicaIdKey] = document.myReplica;
+
   try {
     const response = await fetch(`/commands/${command}`, {
       method: "POST",
       mode: "same-origin",
       cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        sourceReplicaIdKey: `${document.myReplica}`,
-      },
+      headers,
       redirect: "follow",
       referrerPolicy: "no-referrer",
       body: "{}",
@@ -227,8 +229,11 @@ async function postCommand(command: string) {
     await response.json();
     const sourceReplicaId = response.headers.get(sourceReplicaIdKey);
     if (sourceReplicaId != document.myReplica) {
-      addAlert(`Command sent to another replica: ${sourceReplicaId}!=${document.myReplica}.
-        The state machine missed the command...`, "info");
+      addAlert(
+        `Command sent to another replica: ${sourceReplicaId}!=${document.myReplica}.
+        The state machine missed the command...`,
+        "info",
+      );
     }
   } catch (err) {
     console.log("ERROR: posting command:", err?.message ?? err);
@@ -298,17 +303,17 @@ function flashConnectedAlert() {
 
 function addAlert(text: string, alertType: string) {
   // https://getbootstrap.com/docs/5.3/components/alerts/
-  const alertPlaceholder = document.getElementById('alert-placeholder');
-    const wrapper = document.createElement('div')
-    wrapper.innerHTML = [
-      `<div class="alert alert-${alertType} alert-dismissible fade show" role="alert">`,
-      `   <div>${text}</div>`,
-      '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-      '</div>'
-    ].join('')
-    setTimeout(function() {
-      $(wrapper).find('.alert').alert('close');
-    }, 3000);
-  
-    alertPlaceholder?.append(wrapper)
+  const alertPlaceholder = document.getElementById("alert-placeholder");
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = [
+    `<div class="alert alert-${alertType} alert-dismissible fade show" role="alert">`,
+    `   <div>${text}</div>`,
+    '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+    "</div>",
+  ].join("");
+  setTimeout(function () {
+    $(wrapper).find(".alert").alert("close");
+  }, 3000);
+
+  alertPlaceholder?.append(wrapper);
 }
