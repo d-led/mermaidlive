@@ -1,7 +1,7 @@
 console.log(`loaded cluster.js`);
 
 var lastInput = "";
-var clusterEvents: { from: string; to: string; arrowText: string; }[] = [];
+var clusterEvents: { from: string; to: string; arrowText: string }[] = [];
 
 const sourceReplicaIdKey = "Source-Replica-Id";
 const doCorrectMissingIdentities = true;
@@ -135,7 +135,7 @@ async function processEvent(event) {
     case "StartedListening":
     case "ConnectedToRegion":
       //ignore
-    break;
+      break;
     case "ResourcesRefreshed":
       console.log("resources updated, reloading...");
       location.reload();
@@ -145,16 +145,16 @@ async function processEvent(event) {
       // do not show this event in the log
       return;
     case "TotalClusterVisitorsActive":
-        showVisitorsActiveInCluster(event?.properties?.param);
-        // do not show this event in the log
-        return;
+      showVisitorsActiveInCluster(event?.properties?.param);
+      // do not show this event in the log
+      return;
     case "ReplicasActive":
       showReplicasActive(event?.properties?.param);
       // do not show this event in the log
       return;
     case "ConnectedToReplica":
-        document.myReplica = event?.properties?.param;
-        break;
+      document.myReplica = event?.properties?.param;
+      break;
     case "TotalVisitors":
       showTotalVisitors(event?.properties?.param);
       // do not show this event in the log
@@ -202,15 +202,18 @@ function processClusterMessage(event) {
     return;
   }
   clusterEvents.push(e);
-  if (doCorrectMissingIdentities && (e.arrowText.indexOf('hello')==0 || e.arrowText.indexOf('ohai')==0)) {
+  if (
+    doCorrectMissingIdentities &&
+    (e.arrowText.indexOf("hello") == 0 || e.arrowText.indexOf("ohai") == 0)
+  ) {
     correctClusterEvents(e);
   }
 }
 
 function renderableClusterEvent(event) {
   let arrowText = arrowTextFrom(event);
-  let from = normalizeParticipant(event?.properties?.src ?? 'unknown-src');
-  let to = normalizeParticipant(event?.properties?.dst ?? 'unknown-dst');
+  let from = normalizeParticipant(event?.properties?.src ?? "unknown-src");
+  let to = normalizeParticipant(event?.properties?.dst ?? "unknown-dst");
   let mapping = ipMappingFrom(event);
   let re = {
     from,
@@ -226,7 +229,7 @@ function correctClusterEvents(newEvent) {
   if (!newEvent.mapping) {
     return;
   }
-  clusterEvents.forEach((e,i) =>{
+  clusterEvents.forEach((e, i) => {
     if (`${e.from}`.indexOf(newEvent.mapping.ip) !== -1) {
       e.from = newEvent.mapping.peer;
       console.log(`${e.from} -> ${newEvent.mapping.peer}`);
@@ -241,21 +244,21 @@ function correctClusterEvents(newEvent) {
 }
 
 function normalizeParticipant(participant) {
-  if (participant.indexOf(':') == -1) {
+  if (participant.indexOf(":") == -1) {
     return participant;
   }
-  
+
   // opportunistic: ipv6
   let url = tryParseUrl(participant);
   if (!!url) {
     return url;
   }
   // opportunistic: ipv4
-  url = tryParseUrl(participant.replaceAll('[','').replaceAll(']', ''));
+  url = tryParseUrl(participant.replaceAll("[", "").replaceAll("]", ""));
   if (!!url) {
     return url;
   }
-  return `${participant}`.replaceAll(':', '/');
+  return `${participant}`.replaceAll(":", "/");
 }
 
 function tryParseUrl(input) {
@@ -283,11 +286,11 @@ function arrowTextFrom(event) {
         case "peer.hello.network.message":
           return `hello, ${orig?.metadata?.my_ip} == ${orig?.source_peer}`;
         default:
-          return event?.properties?.msg ?? 'unknown-msg';
+          return event?.properties?.msg ?? "unknown-msg";
       }
     }
   } catch (e) {
-    console.log("error parsing message", e)
+    console.log("error parsing message", e);
   }
 }
 
@@ -297,26 +300,26 @@ function ipMappingFrom(event) {
     const ip = orig?.metadata?.my_ip;
     const peer = orig?.source_peer;
     if (ip && peer) {
-        return ({ip, peer})
+      return { ip, peer };
     }
   } catch (e) {
-    console.log("error parsing message", e)
+    console.log("error parsing message", e);
   }
   return null;
 }
 
 function sumUp(peers) {
   let sum = 0;
-  Object.keys(peers).forEach(peer=>sum+=parseInt(peers[peer]));
+  Object.keys(peers).forEach((peer) => (sum += parseInt(peers[peer])));
   return sum;
 }
 
 function updateGraphDefinition() {
   let res = `sequenceDiagram
   `;
-  clusterEvents.forEach(e => {
-    res+=`${e.from}->>+${e.to}: ${e.arrowText}
-    `
+  clusterEvents.forEach((e) => {
+    res += `${e.from}->>+${e.to}: ${e.arrowText}
+    `;
   });
   return res;
 }
@@ -338,17 +341,17 @@ function flashConnectedAlert() {
 
 function addAlert(text: string, alertType: string) {
   // https://getbootstrap.com/docs/5.3/components/alerts/
-  const alertPlaceholder = document.getElementById('alert-placeholder');
-    const wrapper = document.createElement('div')
-    wrapper.innerHTML = [
-      `<div class="alert alert-${alertType} alert-dismissible fade show" role="alert">`,
-      `   <div>${text}</div>`,
-      '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-      '</div>'
-    ].join('')
-    setTimeout(function() {
-      $(wrapper).find('.alert').alert('close');
-    }, 3000);
-  
-    alertPlaceholder?.append(wrapper)
+  const alertPlaceholder = document.getElementById("alert-placeholder");
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = [
+    `<div class="alert alert-${alertType} alert-dismissible fade show" role="alert">`,
+    `   <div>${text}</div>`,
+    '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+    "</div>",
+  ].join("");
+  setTimeout(function () {
+    $(wrapper).find(".alert").alert("close");
+  }, 3000);
+
+  alertPlaceholder?.append(wrapper);
 }
