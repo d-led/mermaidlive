@@ -13,7 +13,9 @@ $(async function () {
   // listen to the user leaving the tab
   document.addEventListener("visibilitychange", () => {
     isTabVisible = document.visibilityState === "visible";
-    console.log(`Tab visibility changed: ${isTabVisible ? "visible" : "hidden"}`);
+    console.log(
+      `Tab visibility changed: ${isTabVisible ? "visible" : "hidden"}`,
+    );
   });
 
   await reRenderGraph("waiting", "");
