@@ -5,21 +5,21 @@
     "test:show-report": "npx playwright show-report"
   },
   "dependencies": {
-    "@types/jquery": "^3.5.30",
+    "@types/jquery": "^3.5.32",
     "node-fetch": "^3.3.2",
-    "prettier": "^3.3.3"
+    "prettier": "^3.5.3"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^10.9.0",
-    "@cucumber/html-formatter": "^21.7.0",
+    "@cucumber/cucumber": "^11.2.0",
+    "@cucumber/html-formatter": "^21.10.0",
     "@cucumber/pretty-formatter": "^1.0.1",
-    "@playwright/test": "^1.46.1",
-    "@types/expect": "^24.3.0",
+    "@playwright/test": "^1.51.1",
+    "@types/expect": "^24.3.2",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^20.16.3",
+    "@types/node": "^22.14.1",
     "cucumber-console-formatter": "^1.0.0",
-    "fs-extra": "^11.2.0",
+    "fs-extra": "^11.3.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.8.3"
   }
 }
