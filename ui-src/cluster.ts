@@ -3,7 +3,6 @@ console.log(`loaded cluster.js`);
 var lastInput = "";
 var clusterEvents: { from: string; to: string; arrowText: string }[] = [];
 
-const sourceReplicaIdKey = "Source-Replica-Id";
 const doCorrectMissingIdentities = true;
 
 $(async function () {

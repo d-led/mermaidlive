@@ -3,7 +3,7 @@ console.log(`loaded index.js`);
 document.lastInput = "";
 document.myReplica = null;
 
-const sourceReplicaIdKey = "Source-Replica-Id";
+import { sourceReplicaIdKey } from "./common";
 
 $(async function () {
   await reRenderGraph("waiting", "");
