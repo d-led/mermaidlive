@@ -13,10 +13,10 @@ const browserOptions: LaunchOptions = {
 };
 
 export var config = {
-  browser: process.env.BROWSER || "chromium",
+  browser: process.env.BROWSER ?? "chromium",
   browserOptions,
   startServer: process.env.SUT_START_SERVER === "true",
-  BASE_URL: "http://localhost:8080" || process.env.SUT_BASE_URL,
+  BASE_URL: process.env.SUT_BASE_URL ?? "http://localhost:8080",
   IMG_THRESHOLD: { threshold: 0.4 },
   BASE_API_URL: "http://localhost:8080",
   server: null as any,
