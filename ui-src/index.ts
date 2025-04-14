@@ -5,12 +5,28 @@ document.myReplica = null;
 
 import { sourceReplicaIdKey } from "./common";
 
+let isTabVisible = true;
+
+const reconnectDelaySeconds = 5; // seconds
+
 $(async function () {
+  // listen to the user leaving the tab
+  document.addEventListener("visibilitychange", () => {
+    isTabVisible = document.visibilityState === "visible";
+    console.log(`Tab visibility changed: ${isTabVisible ? "visible" : "hidden"}`);
+  });
+
   await reRenderGraph("waiting", "");
 
   console.log("done");
 
   while (true) {
+    if (!isTabVisible) {
+      console.log("Tab is not visible. Not reconnecting for now...");
+      await sleep(reconnectDelaySeconds); // Check periodically if the tab becomes visible
+      continue;
+    }
+
     console.log("subscribing");
     try {
       await subscribeToEvents();
@@ -19,7 +35,7 @@ $(async function () {
     }
     showDisconnectedAlert();
     console.log("waiting before reconnecting...");
-    await sleep(5);
+    await sleep(reconnectDelaySeconds);
   }
 });
 
