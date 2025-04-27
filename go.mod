@@ -9,8 +9,8 @@ require (
 	github.com/carlmjohnson/versioninfo v0.22.5
 	github.com/cskr/pubsub/v2 v2.0.2
 	github.com/cucumber/godog v0.15.0
-	github.com/d-led/percounter v0.0.26
-	github.com/d-led/zmqcluster v0.0.8
+	github.com/d-led/percounter v0.0.27
+	github.com/d-led/zmqcluster v0.0.9
 	github.com/evanw/esbuild v0.25.3
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.10.0
