@@ -11,9 +11,9 @@ require (
 	github.com/cucumber/godog v0.15.0
 	github.com/d-led/percounter v0.0.27
 	github.com/d-led/zmqcluster v0.0.9
-	github.com/evanw/esbuild v0.25.3
+	github.com/evanw/esbuild v0.25.5
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/gin-gonic/gin v1.10.0
+	github.com/gin-gonic/gin v1.10.1
 	github.com/spf13/pflag v1.0.6
 	github.com/ulule/limiter/v3 v3.11.2
 )
@@ -22,11 +22,11 @@ require (
 	github.com/go-zeromq/goczmq/v4 v4.2.2 // indirect
 	github.com/go-zeromq/zmq4 v0.17.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
 )
 
 require (
-	github.com/bytedance/sonic v1.13.2 // indirect
+	github.com/bytedance/sonic v1.13.3 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
@@ -52,12 +52,12 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	github.com/ugorji/go/codec v1.2.12 // indirect
-	golang.org/x/arch v0.16.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	github.com/ugorji/go/codec v1.2.14 // indirect
+	golang.org/x/arch v0.17.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
