@@ -7,19 +7,19 @@
   "dependencies": {
     "@types/jquery": "^3.5.32",
     "node-fetch": "^3.3.2",
-    "prettier": "^3.5.3"
+    "prettier": "^3.6.2"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^11.2.0",
-    "@cucumber/html-formatter": "^21.10.1",
-    "@cucumber/pretty-formatter": "^1.0.1",
-    "@playwright/test": "^1.52.0",
+    "@cucumber/cucumber": "^12.1.0",
+    "@cucumber/html-formatter": "^21.14.0",
+    "@cucumber/pretty-formatter": "^2.0.1",
+    "@playwright/test": "^1.54.2",
     "@types/expect": "^24.3.2",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^22.15.2",
+    "@types/node": "^22.17.2",
     "cucumber-console-formatter": "^1.0.0",
-    "fs-extra": "^11.3.0",
+    "fs-extra": "^11.3.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }
