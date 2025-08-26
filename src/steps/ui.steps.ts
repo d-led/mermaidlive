@@ -11,6 +11,11 @@ const lastEventSeen = async function (page: any, event: string) {
   await slowExpect(lastEvent).toContainText(event);
 };
 
+const lastErrorSeen = async function (page: any, event: string) {
+  const lastEvent = page.locator("#delayed-text");
+  await slowExpect(lastEvent).toContainText(event);
+};
+
 BeforeAll(async () => {
   if (config.startServer && !config.server) {
     console.log(`Starting server: `);
@@ -44,7 +49,7 @@ Given(
     const page = this.page!;
     await page.goto(config.BASE_URL);
 
-    const stateNode = page.locator(`[data-id=${state}]`);
+    const stateNode = page.locator(`[id^="state-${state}-"]`);
     await slowExpect(stateNode).toHaveClass(/\binProgress\b/);
   },
 );
@@ -59,12 +64,12 @@ Then("work is completed", async function () {
 });
 
 Then("the request is ignored", async function () {
-  await lastEventSeen(this.page!, "RequestIgnored");
+  await lastErrorSeen(this.page!, "RequestIgnored");
 });
 
 Then("the system is found in state {string}", async function (state: string) {
   const page = this.page!;
-  const stateNode = page.locator(`[data-id=${state}]`);
+  const stateNode = page.locator(`[id^="state-${state}-"]`);
   await slowExpect(stateNode).toHaveClass(/\binProgress\b/);
 });
 
