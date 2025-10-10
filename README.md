@@ -11,6 +11,7 @@ go run ./cmd/mermaidlive
 [http://localhost:8080/ui/](http://localhost:8080/ui/)
 
 ![screencast](./docs/img/live_state.gif)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fd-led%2Fmermaidlive.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fd-led%2Fmermaidlive?ref=badge_shield)
 
 - to change the default countdown delay, provide the option, e.g. `-delay 150ms`
 
@@ -188,3 +189,7 @@ docker compose cp mermaidlive:/appdata/my.gcounter .
 ```
 
 which results in the observable counter value of `16`.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fd-led%2Fmermaidlive.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fd-led%2Fmermaidlive?ref=badge_large)
