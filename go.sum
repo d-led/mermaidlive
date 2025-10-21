@@ -20,10 +20,10 @@ github.com/cucumber/godog v0.15.1/go.mod h1:qju+SQDewOljHuq9NSM66s0xEhogx0q30flf
 github.com/cucumber/messages/go/v21 v21.0.1 h1:wzA0LxwjlWQYZd32VTlAVDTkW6inOFmSM+RuOwHZiMI=
 github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUtmYQAQPLk7w5vWsk5s=
 github.com/cucumber/messages/go/v22 v22.0.0/go.mod h1:aZipXTKc0JnjCsXrJnuZpWhtay93k7Rn3Dee7iyPJjs=
-github.com/d-led/percounter v0.0.27 h1:wYlQKW0cH9Zt+DB3pBcqFhlVANv20x+z4XA6kVA4nhQ=
-github.com/d-led/percounter v0.0.27/go.mod h1:NY58W2Dhh9Jci0ivPKDgxRM19DueXL1IBsHBbQUaJ/c=
-github.com/d-led/zmqcluster v0.0.9 h1:DUSbryZdrAq7q+BbsvDtHV73hDjUnfJWTOTZStD7ZYk=
-github.com/d-led/zmqcluster v0.0.9/go.mod h1:kJA8ILvWHgOY6emCEnBMucJAuNRabs768oQ+Q+12slw=
+github.com/d-led/percounter v0.0.28 h1:RJqcxVog/04mOePQ+Y2u6nOqNn/+pSG5tyJW7jXSq94=
+github.com/d-led/percounter v0.0.28/go.mod h1:Yz5cpqKQ1yZXO97t+++EMYzBGQ9pnZt4gvBrGrHr070=
+github.com/d-led/zmqcluster v0.0.10 h1:lajOkdxD8t40WHEJfRXmrGulVDZwCN+vo5X2HmVRL58=
+github.com/d-led/zmqcluster v0.0.10/go.mod h1:3r754vcU9l70MbmklMpLaAxzQwN2B9Xa1XKrPFll4bQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
