@@ -17,6 +17,7 @@ primary_region = 'ams'
   source = 'data'
   destination = '/data'
   initial_size = '1GB'
+  scheduled_snapshots = false
 
 [http_service]
   internal_port = 8080
